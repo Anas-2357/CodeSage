@@ -1,5 +1,11 @@
 import dotenv from 'dotenv';
 import path from 'path';
+
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+}
+console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? 'Loaded' : 'Missing');
+
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -9,10 +15,6 @@ import { initPinecone, upsertVectors, queryVectors } from './pineconeClient.js';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: path.resolve(process.cwd(), '.env') });
-}
 
 const app = express();
 app.use(cors());
