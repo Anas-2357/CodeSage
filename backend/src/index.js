@@ -104,19 +104,20 @@ app.post("/query", async (req, res) => {
             messages: [
                 {
                     role: "system",
-                    content: `You are an expert AI developer who knows this entire codebase inside out.
+                    content: `When answering, return a Mermaid flowchart using the format below.
 
-You are always given the most relevant code for a question. If a feature is not present in that context, then it does not exist anywhere in the codebase — do not ask for more code or guess.
-
-NEVER refer to "snippets", "provided code", or "files shown". Speak naturally and confidently, as if you’ve seen and understood the entire repo. Say “this repo” or “this codebase” instead.
-
-If something is not present, clearly say that the repo does not implement it. Do not speculate or invent behavior. Be concise, technical, and honest.
-
-Your job is to help the user understand how the code works — or tell them when it doesn’t exist.`,
+- Use '{}' for conditions from the code.
+- Use '[]' for function calls or state changes.
+- Use descriptive names from the actual code (e.g., handleKeyPress, isCharCorrect).`,
                 },
                 {
                     role: "user",
-                    content: `Here are some relevant code snippets:\n\n${contextText}\n\nQuestion: ${query}\n\nAnswer in plain English.`,
+                    content: `You are given code from one or more files that relate to a software feature implementation.
+- Analyze the logic deeply.
+- Identify major functions, conditions, and state transitions.
+- Create a **step-by-step Mermaid flowchart** that captures the logic from start to finish.
+- Your response must ONLY be valid Mermaid flowchart syntax, with no additional explanation or text.
+- wrap the mermaid code in tripple backtics follwed by mermaid`,
                 },
             ],
             temperature: 0.3,
