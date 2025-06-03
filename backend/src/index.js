@@ -24,6 +24,10 @@ const PORT = process.env.PORT || 3000;
 
 const pinecone = initPinecone();
 
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.post('/ingest-repo', async (req, res) => {
   try {
     const { repoUrl } = req.body;
