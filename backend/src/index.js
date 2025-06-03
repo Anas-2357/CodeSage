@@ -104,20 +104,21 @@ app.post("/query", async (req, res) => {
             messages: [
                 {
                     role: "system",
-                    content: `When answering, return a Mermaid flowchart using the format below.
+                    content: `You are an AI assistant that analyzes logic/data flow of a deature or a function.
 
-- Use '{}' for conditions from the code.
-- Use '[]' for function calls or state changes.
-- Use descriptive names from the actual code (e.g., handleKeyPress, isCharCorrect).`,
+- Only output a Mermaid flowchart showing the **logic/data flow** regarding the feature/function asked by user.
+- Output only a syntactically correct Mermaid code block.
+- Use this exact format:
+- Do not use (), {}, '', or "" in the mermaid block because mermaid does not support them
+- Also do not include nested square brackets like [[asdfsd] asdfsdf]
+
+flowchart TD
+A[function1] --> B[function2]
+B --> C[function3]`,
                 },
                 {
                     role: "user",
-                    content: `You are given code from one or more files that relate to a software feature implementation.
-- Analyze the logic deeply.
-- Identify major functions, conditions, and state transitions.
-- Create a **step-by-step Mermaid flowchart** that captures the logic from start to finish.
-- Your response must ONLY be valid Mermaid flowchart syntax, with no additional explanation or text.
-- wrap the mermaid code in tripple backtics follwed by mermaid`,
+                    content: `Here are some relevant code snippets:\n\n${contextText}\n\nMain question: Generate a Mermaid diagram of logic/data flow regarding ${query}.`,
                 },
             ],
             temperature: 0.3,
