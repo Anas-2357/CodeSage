@@ -1,7 +1,13 @@
 import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function askGPT(query, contextText) {
+export async function askGPT(query, contextText, mermaidComplexity) {
+    const complexityPara =
+        mermaidComplexity === 1
+            ? "Each element should be a function name, use as few elements as possible"
+            : mermaidComplexity === 2
+            ? "There should be a maximum of 25 elements"
+            : "Provide as many elements as possible.";
     const completion = await openai.chat.completions.create({
         model: "gpt-4.1-nano",
         messages: [
@@ -13,7 +19,9 @@ export async function askGPT(query, contextText) {
                 Provide highlevel data flow with elements being functions.
                 Also provide a list regarding the work and element do.
                 Don't provide any plain text output instead return high level mermaid code and wrap labels in "" for connections between elements.
-                `
+                ${complexityPara}
+                Also provide an object with keys as element names and value as object of that element which consists of file that element is present in, function in which this elment is present in and description for that element.
+                `,
             },
             {
                 role: "user",
@@ -24,15 +32,6 @@ export async function askGPT(query, contextText) {
     });
     return completion.choices[0].message.content;
 }
-
-
-
-
-
-
-
-
-
 
 // Generate a Mermaid diagram of logic/data flow regarding
 

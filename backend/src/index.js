@@ -71,7 +71,7 @@ app.post("/upsert", async (req, res) => {
 
 app.post("/query", async (req, res) => {
     try {
-        const { query } = req.body;
+        const { query, mermaidComplexity = 2 } = req.body;
         const topK = 200;
 
         if (!query) {
@@ -103,7 +103,7 @@ app.post("/query", async (req, res) => {
             console.log("Received gimini's response and sent them to GPT")
             console.log("Waiting for GPT's response...")
 
-        const responseByGPT = await askGPT(query, contentCompressedbyGemini);
+        const responseByGPT = await askGPT(query, contentCompressedbyGemini, mermaidComplexity);
         // const responseByGPT = contentCompressbyGemini;
         console.log(`Final response by GPT ${responseByGPT}`);
 
