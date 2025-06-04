@@ -11,15 +11,13 @@ export function initPinecone() {
     return pinecone;
 }
 
-const INDEX_NAME = process.env.PINECONE_INDEX;
-
 export async function upsertVectors(client, vectors, indexName) {
     const index = client.Index(indexName);
     await index.upsert(vectors);
 }
 
-export async function queryVectors(client, vector, topK = 5) {
-    const index = client.Index(INDEX_NAME);
+export async function queryVectors(client, vector, indexName, topK = 5) {
+    const index = client.Index(indexName);
     const queryResponse = await index.query({
         vector,
         topK,

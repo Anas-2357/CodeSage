@@ -53,7 +53,7 @@ app.post("/ingest-repo", async (req, res) => {
 
 app.post("/query", async (req, res) => {
     try {
-        const { query, mermaidComplexity = 2 } = req.body;
+        const { query, indexName, mermaidComplexity = 2 } = req.body;
         const topK = 200;
 
         if (!query) {
@@ -66,7 +66,7 @@ app.post("/query", async (req, res) => {
         const queryEmbedding = await generateEmbeddings(query);
 
         // 2. Get topK relevant code chunks
-        const results = await queryVectors(pinecone, queryEmbedding, topK);
+        const results = await queryVectors(pinecone, queryEmbedding, indexName, topK);
 
         // 3. Extract and format the relevant chunks
         const contextText = results
