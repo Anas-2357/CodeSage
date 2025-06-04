@@ -29,14 +29,16 @@ export async function ingestRepo(repoUrl, pineconeClient) {
                 const content = fs.readFileSync(file, "utf-8");
                 const chunks = splitIntoChunks(content);
 
-                const embeddings = await generateEmbeddings(chunks);
+                const embeddings = await generateEmbeddings(chunks.map(c => c.text));
 
                 const vectors = embeddings.map((embedding, i) => ({
                     id: `${file}::chunk-${i}`,
                     values: embedding,
                     metadata: {
                         filePath: file.replace(tempDir, ""),
-                        chunk: chunks[i],
+                        chunk: chunks[i].text,
+                        startLine: chunks[i].startLine,
+                        endLine: chunks[i].endLine,
                         repoUrl,
                     },
                 }));
@@ -72,16 +74,48 @@ export function splitIntoChunks(text, maxTokens = 1000, overlap = 200) {
     const tokens = enc.encode(text);
     const chunks = [];
 
+    // Build mapping of char index to line number
+    const lineStarts = [0]; // stores char index of each line start
+    for (let i = 0; i < text.length; i++) {
+        if (text[i] === '\n') {
+            lineStarts.push(i + 1);
+        }
+    }
+
+    // Helper: get line number from char index using binary search
+    function getLineNumber(charIndex) {
+        let low = 0, high = lineStarts.length - 1;
+        while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            if (lineStarts[mid] <= charIndex) {
+                if (mid === lineStarts.length - 1 || lineStarts[mid + 1] > charIndex) {
+                    return mid + 1; // line numbers start at 1
+                }
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return 1;
+    }
+
     let start = 0;
     while (start < tokens.length) {
         const end = Math.min(start + maxTokens, tokens.length);
-        const chunkTokens = tokens.slice(start, end);
 
         const startCharIndex = enc.decode(tokens.slice(0, start)).length;
         const endCharIndex = enc.decode(tokens.slice(0, end)).length;
 
         const chunkText = text.slice(startCharIndex, endCharIndex);
-        chunks.push(chunkText);
+
+        const startLine = getLineNumber(startCharIndex);
+        const endLine = getLineNumber(endCharIndex);
+
+        chunks.push({
+            text: chunkText,
+            startLine,
+            endLine,
+        });
 
         start += maxTokens - overlap;
     }
