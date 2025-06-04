@@ -3,7 +3,7 @@ import pLimit from "p-limit";
 import simpleGit from "simple-git";
 import fs from "fs";
 import path from "path";
-import { generateEmbeddings } from "./openaiClient.js";
+import { generateEmbeddings } from "./openaiEmbeddingsClient.js";
 import { upsertVectors } from "./pineconeClient.js";
 import os from "os";
 import { v4 as uuidv4 } from "uuid";

@@ -4,20 +4,15 @@ import path from "path";
 if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 }
-console.log(
-    "OPENAI_API_KEY:",
-    process.env.OPENAI_API_KEY ? "Loaded" : "Missing"
-);
 
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { ingestRepo } from "./repoEmbedder.js";
-import { generateEmbeddings } from "./openaiClient.js";
+import { generateEmbeddings } from "./openaiEmbeddingsClient.js";
 import { initPinecone, upsertVectors, queryVectors } from "./pineconeClient.js";
-import OpenAI from "openai";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { askGPT } from "./openaiClient.js";
+import { compressChunksWithGemini } from "./geminiClient.js";
 
 const app = express();
 app.use(cors());
@@ -76,7 +71,8 @@ app.post("/upsert", async (req, res) => {
 
 app.post("/query", async (req, res) => {
     try {
-        const { query, topK = 5 } = req.body;
+        const { query } = req.body;
+        const topK = 200;
 
         if (!query) {
             return res
@@ -98,34 +94,21 @@ app.post("/query", async (req, res) => {
             )
             .join("\n---\n");
 
-        // 4. Send a prompt to OpenAI
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4.1-nano",
-            messages: [
-                {
-                    role: "system",
-                    content: `You are an AI assistant that analyzes logic/data flow of a deature or a function.
+            console.log("Received chunks from pinecone");
+            console.log("Chunks sent to gimini");
+            console.log("Waiting for gimini's response...");
 
-- Only output a Mermaid flowchart showing the **logic/data flow** regarding the feature/function asked by user.
-- Output only a syntactically correct Mermaid code block.
-- Use this exact format:
-- Do not use (), {}, '', or "" in the mermaid block because mermaid does not support them
-- Also do not include nested square brackets like [[asdfsd] asdfsdf]
+        const contentCompressedbyGemini = await compressChunksWithGemini(contextText, query);
 
-flowchart TD
-A[function1] --> B[function2]
-B --> C[function3]`,
-                },
-                {
-                    role: "user",
-                    content: `Here are some relevant code snippets:\n\n${contextText}\n\nMain question: Generate a Mermaid diagram of logic/data flow regarding ${query}.`,
-                },
-            ],
-            temperature: 0.3,
-        });
+            console.log("Received gimini's response and sent them to GPT")
+            console.log("Waiting for GPT's response...")
 
-        const answer = completion.choices[0].message.content;
-        res.json({ answer });
+        const responseByGPT = await askGPT(query, contentCompressedbyGemini);
+        // const responseByGPT = contentCompressbyGemini;
+        console.log(`Final response by GPT ${responseByGPT}`);
+
+        // const answer = responseByGPT.choices[0].message.content;
+        res.json(responseByGPT);
     } catch (error) {
         console.error("Error in /query:", error);
         res.status(500).json({ error: "Internal server error" });
