@@ -21,7 +21,7 @@ export async function ingestRepo(repoUrl, pineconeClient) {
     const codeFiles = getAllCodeFiles(tempDir);
     const totalFiles = codeFiles.length;
 
-    const limit = pLimit(3);
+    const limit = pLimit(100);
 
     await Promise.all(
         codeFiles.map((file, index) =>
