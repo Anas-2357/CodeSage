@@ -10,7 +10,13 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { ingestRepo } from "./repoEmbedder.js";
 import { generateEmbeddings } from "./openaiEmbeddingsClient.js";
-import { initPinecone, upsertVectors, queryVectors } from "./pineconeClient.js";
+import {
+    initPinecone,
+    upsertVectors,
+    queryVectors,
+    waitForIndexReady,
+    generateNewIndex,
+} from "./pineconeClient.js";
 import { askGPT } from "./openaiClient.js";
 import { compressChunksWithGemini } from "./geminiClient.js";
 
@@ -28,14 +34,16 @@ app.get("/", (req, res) => {
 
 app.post("/ingest-repo", async (req, res) => {
     try {
-        const { repoUrl } = req.body;
+        const { repoUrl, indexName } = req.body;
         if (!repoUrl) {
             return res
                 .status(400)
                 .json({ error: "Missing repoUrl in request body" });
         }
 
-        const result = await ingestRepo(repoUrl, pinecone);
+        await generateNewIndex(indexName);
+
+        const result = await ingestRepo(repoUrl, pinecone, indexName);
         res.json(result);
     } catch (error) {
         console.error("Error in /ingest-repo:", error);
@@ -94,16 +102,23 @@ app.post("/query", async (req, res) => {
             )
             .join("\n---\n");
 
-            console.log("Received chunks from pinecone");
-            console.log("Chunks sent to gimini");
-            console.log("Waiting for gimini's response...");
+        console.log("Received chunks from pinecone");
+        console.log("Chunks sent to gimini");
+        console.log("Waiting for gimini's response...");
 
-        const contentCompressedbyGemini = await compressChunksWithGemini(contextText, query);
+        const contentCompressedbyGemini = await compressChunksWithGemini(
+            contextText,
+            query
+        );
 
-            console.log("Received gimini's response and sent them to GPT")
-            console.log("Waiting for GPT's response...")
+        console.log("Received gimini's response and sent them to GPT");
+        console.log("Waiting for GPT's response...");
 
-        const responseByGPT = await askGPT(query, contentCompressedbyGemini, mermaidComplexity);
+        const responseByGPT = await askGPT(
+            query,
+            contentCompressedbyGemini,
+            mermaidComplexity
+        );
         // const responseByGPT = contentCompressbyGemini;
         console.log(`Final response by GPT ${responseByGPT}`);
 

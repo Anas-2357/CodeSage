@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const enc = encoding_for_model("text-embedding-3-small");
 
-export async function ingestRepo(repoUrl, pineconeClient) {
+export async function ingestRepo(repoUrl, pineconeClient, indexName) {
     const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
     const git = simpleGit();
 
@@ -30,7 +30,9 @@ export async function ingestRepo(repoUrl, pineconeClient) {
                 const content = fs.readFileSync(file, "utf-8");
                 const chunks = splitIntoChunks(content);
 
-                const embeddings = await generateEmbeddings(chunks.map(c => c.text));
+                const embeddings = await generateEmbeddings(
+                    chunks.map((c) => c.text)
+                );
 
                 const vectors = embeddings.map((embedding, i) => ({
                     id: `${file}::chunk-${i}`,
@@ -44,17 +46,18 @@ export async function ingestRepo(repoUrl, pineconeClient) {
                     },
                 }));
 
-                await upsertVectors(pineconeClient, vectors);
+                await upsertVectors(pineconeClient, vectors, indexName);
 
                 processedCount++;
-                console.log(`✅ Processed ${processedCount} / ${totalFiles} files`);
+                console.log(
+                    `✅ Processed ${processedCount} / ${totalFiles} files`
+                );
             })
         )
     );
 
     return { message: `Ingested ${totalFiles} files from repo.` };
 }
-
 
 function getAllCodeFiles(dir, allFiles = []) {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -79,18 +82,22 @@ export function splitIntoChunks(text, maxTokens = 1000, overlap = 200) {
     // Build mapping of char index to line number
     const lineStarts = [0]; // stores char index of each line start
     for (let i = 0; i < text.length; i++) {
-        if (text[i] === '\n') {
+        if (text[i] === "\n") {
             lineStarts.push(i + 1);
         }
     }
 
     // Helper: get line number from char index using binary search
     function getLineNumber(charIndex) {
-        let low = 0, high = lineStarts.length - 1;
+        let low = 0,
+            high = lineStarts.length - 1;
         while (low <= high) {
             const mid = Math.floor((low + high) / 2);
             if (lineStarts[mid] <= charIndex) {
-                if (mid === lineStarts.length - 1 || lineStarts[mid + 1] > charIndex) {
+                if (
+                    mid === lineStarts.length - 1 ||
+                    lineStarts[mid + 1] > charIndex
+                ) {
                     return mid + 1; // line numbers start at 1
                 }
                 low = mid + 1;
