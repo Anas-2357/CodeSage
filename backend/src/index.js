@@ -51,32 +51,6 @@ app.post("/ingest-repo", async (req, res) => {
     }
 });
 
-app.post("/upsert", async (req, res) => {
-    try {
-        const { id, text } = req.body;
-        if (!id || !text) {
-            return res
-                .status(400)
-                .json({ error: "Missing id or text in body" });
-        }
-
-        const embeddingVector = await generateEmbeddings(text);
-
-        await upsertVectors(pinecone, [
-            {
-                id,
-                values: embeddingVector,
-                metadata: { text },
-            },
-        ]);
-
-        return res.status(200).json({ message: "Upsert successful" });
-    } catch (error) {
-        console.error("Error in /upsert:", error);
-        return res.status(500).json({ error: error.message });
-    }
-});
-
 app.post("/query", async (req, res) => {
     try {
         const { query, mermaidComplexity = 2 } = req.body;
