@@ -22,9 +22,10 @@ export async function ingestRepo(repoUrl, pineconeClient) {
     const totalFiles = codeFiles.length;
 
     const limit = pLimit(100);
+    let processedCount = 0;
 
     await Promise.all(
-        codeFiles.map((file, index) =>
+        codeFiles.map((file) =>
             limit(async () => {
                 const content = fs.readFileSync(file, "utf-8");
                 const chunks = splitIntoChunks(content);
@@ -43,16 +44,17 @@ export async function ingestRepo(repoUrl, pineconeClient) {
                     },
                 }));
 
-                // Optional: batch upsert if large
                 await upsertVectors(pineconeClient, vectors);
 
-                console.log(`✅ Processed ${index + 1} / ${totalFiles} files`);
+                processedCount++;
+                console.log(`✅ Processed ${processedCount} / ${totalFiles} files`);
             })
         )
     );
 
     return { message: `Ingested ${totalFiles} files from repo.` };
 }
+
 
 function getAllCodeFiles(dir, allFiles = []) {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
