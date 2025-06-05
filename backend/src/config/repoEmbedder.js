@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const enc = encoding_for_model("text-embedding-3-small");
 
-export async function ingestRepo(repoUrl, pineconeClient, indexName) {
+export async function ingestRepo(repoUrl, pinecone, indexName, namespace) {
     const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
     const git = simpleGit();
 
@@ -46,7 +46,7 @@ export async function ingestRepo(repoUrl, pineconeClient, indexName) {
                     },
                 }));
 
-                await upsertVectors(pineconeClient, vectors, indexName);
+                await upsertVectors(pinecone, vectors, indexName, namespace);
 
                 processedCount++;
                 console.log(

@@ -11,8 +11,9 @@ export function initPinecone() {
     return pinecone;
 }
 
-export async function upsertVectors(vectors, indexName) {
-    const index = pinecone.Index(indexName);
+export async function upsertVectors(pinecone, vectors, indexName, namespace) {
+    const index = pinecone.Index(indexName).namespace(namespace);
+
     await index.upsert(vectors);
 }
 
@@ -24,34 +25,4 @@ export async function queryVectors(vector, indexName, topK = 5) {
         includeMetadata: true,
     });
     return queryResponse.matches || [];
-}
-
-export async function waitForIndexReady(indexName, timeout = 60000) {
-    const start = Date.now();
-
-    while (Date.now() - start < timeout) {
-        const description = await pinecone.describeIndex(indexName);
-        if (description.status?.ready) {
-            return true;
-        }
-        await new Promise((r) => setTimeout(r, 2000));
-    }
-
-    throw new Error("Timed out waiting for Pinecone index to be ready");
-}
-
-export async function generateNewIndex(indexName) {
-    await pinecone.createIndex({
-        name: indexName,
-        dimension: 1536,
-        metric: "cosine",
-        spec: {
-            serverless: {
-                cloud: "aws",
-                region: "us-east-1",
-            },
-        },
-    });
-
-    await waitForIndexReady(indexName);
 }
