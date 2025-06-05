@@ -23,7 +23,7 @@ export const register = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            credits: 1000,
+            tokens: 2000,
             repos: [],
         });
 

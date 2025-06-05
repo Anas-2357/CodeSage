@@ -5,7 +5,7 @@ const pinecone = initPinecone();
 
 export const ingestRepository = async (req, res) => {
     try {
-        const { repoUrl, namespace } = req.body;
+        const { repoUrl, namespace, dryrun } = req.body;
         if (!repoUrl) {
             return res.status(400).json({ error: "Missing repoUrl" });
         }
@@ -14,10 +14,12 @@ export const ingestRepository = async (req, res) => {
         }
 
         const result = await ingestRepo(
+            req.userId,
             repoUrl,
             pinecone,
             "codesage-prod",
-            namespace
+            namespace,
+            dryrun
         );
         res.json(result);
     } catch (err) {

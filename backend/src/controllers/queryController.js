@@ -2,9 +2,15 @@ import { generateEmbeddings } from "../config/openaiEmbeddingsClient.js";
 import { queryVectors } from "../config/pineconeClient.js";
 import { compressChunksWithGemini } from "../config/geminiClient.js";
 import { askGPT } from "../config/openaiClient.js";
+import User from "../models/User.js";
 
 export const query = async (req, res) => {
     try {
+        const userId = req.userId;
+        const user = await User.findById(userId);
+        if(user.tokens <= 0){
+            return res.status(429).json({ error: "You are out of tokens" });
+        }
         const { query, indexName, mermaidComplexity = 2 } = req.body;
         const topK = 200;
 
@@ -23,7 +29,7 @@ export const query = async (req, res) => {
             .join("\n---\n");
 
         const compressed = await compressChunksWithGemini(contextText, query);
-        const gptResponse = await askGPT(query, compressed, mermaidComplexity);
+        const gptResponse = await askGPT(userId, query, compressed, mermaidComplexity);
 
         res.json(gptResponse);
     } catch (err) {

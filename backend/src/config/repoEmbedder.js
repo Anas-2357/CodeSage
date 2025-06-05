@@ -7,10 +7,18 @@ import { generateEmbeddings } from "./openaiEmbeddingsClient.js";
 import { upsertVectors } from "./pineconeClient.js";
 import os from "os";
 import { v4 as uuidv4 } from "uuid";
+import User from "../models/User.js";
 
 const enc = encoding_for_model("text-embedding-3-small");
 
-export async function ingestRepo(repoUrl, pinecone, indexName, namespace) {
+export async function ingestRepo(
+    userId,
+    repoUrl,
+    pinecone,
+    indexName,
+    namespace,
+    dryRun = true
+) {
     const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
     const git = simpleGit();
 
@@ -19,44 +27,85 @@ export async function ingestRepo(repoUrl, pinecone, indexName, namespace) {
 
     console.log("Reading code files...");
     const codeFiles = getAllCodeFiles(tempDir);
-    const totalFiles = codeFiles.length;
+    const allChunks = [];
 
+    let totalTokens = 0;
+
+    // First pass: collect chunks and count total tokens
+    for (const file of codeFiles) {
+        const content = fs.readFileSync(file, "utf-8");
+        const chunks = splitIntoChunks(content);
+        const tokensInFile = chunks.reduce(
+            (sum, chunk) => sum + enc.encode(chunk.text).length,
+            0
+        );
+        totalTokens += tokensInFile;
+
+        chunks.forEach((chunk, i) => {
+            allChunks.push({
+                id: `${file}::chunk-${i}`,
+                text: chunk.text,
+                startLine: chunk.startLine,
+                endLine: chunk.endLine,
+                filePath: file.replace(tempDir, ""),
+            });
+        });
+    }
+
+    const user = await User.findById(userId);
+    var availableTokens = availableTokens = Number((user.tokens).toFixed(0));
+
+    if (dryRun) {
+        return {
+            message: "✅ Dry run complete. Enough tokens available.",
+            estimatedTokenCount: Math.ceil(totalTokens / 500),
+            availableTokens,
+            totalFiles: codeFiles.length,
+        };
+    }
+
+    // Token quota check
+    if (totalTokens > availableTokens) {
+        totalTokens = Number((totalTokens / 500).toFixed(0));
+        return {
+            message: "❌ Not enough tokens available to process this repo.",
+            requiredTokens: totalTokens,
+            availableTokens,
+        };
+    }
+
+    // Proceed with embeddings
     const limit = pLimit(100);
-    let processedCount = 0;
-
-    await Promise.all(
-        codeFiles.map((file) =>
-            limit(async () => {
-                const content = fs.readFileSync(file, "utf-8");
-                const chunks = splitIntoChunks(content);
-
-                const embeddings = await generateEmbeddings(
-                    chunks.map((c) => c.text)
-                );
-
-                const vectors = embeddings.map((embedding, i) => ({
-                    id: `${file}::chunk-${i}`,
-                    values: embedding,
-                    metadata: {
-                        filePath: file.replace(tempDir, ""),
-                        chunk: chunks[i].text,
-                        startLine: chunks[i].startLine,
-                        endLine: chunks[i].endLine,
-                        repoUrl,
-                    },
-                }));
-
-                await upsertVectors(pinecone, vectors, indexName, namespace);
-
-                processedCount++;
-                console.log(
-                    `✅ Processed ${processedCount} / ${totalFiles} files`
-                );
-            })
+    const embeddingPromises = allChunks.map((chunk) =>
+        limit(() =>
+            generateEmbeddings([chunk.text]).then((embeddings) => ({
+                ...chunk,
+                embedding: embeddings[0],
+            }))
         )
     );
 
-    return { message: `Ingested ${totalFiles} files from repo.` };
+    const embeddedChunks = await Promise.all(embeddingPromises);
+
+    const vectors = embeddedChunks.map((chunk) => ({
+        id: chunk.id,
+        values: chunk.embedding,
+        metadata: {
+            filePath: chunk.filePath,
+            chunk: chunk.text,
+            startLine: chunk.startLine,
+            endLine: chunk.endLine,
+            repoUrl,
+        },
+    }));
+
+    await upsertVectors(pinecone, vectors, indexName, namespace);
+
+    return {
+        message: `✅ Ingested ${codeFiles.length} files from repo.`,
+        totalTokens,
+        availableTokens,
+    };
 }
 
 function getAllCodeFiles(dir, allFiles = []) {
@@ -80,14 +129,13 @@ export function splitIntoChunks(text, maxTokens = 1000, overlap = 200) {
     const chunks = [];
 
     // Build mapping of char index to line number
-    const lineStarts = [0]; // stores char index of each line start
+    const lineStarts = [0];
     for (let i = 0; i < text.length; i++) {
         if (text[i] === "\n") {
             lineStarts.push(i + 1);
         }
     }
 
-    // Helper: get line number from char index using binary search
     function getLineNumber(charIndex) {
         let low = 0,
             high = lineStarts.length - 1;
@@ -98,7 +146,7 @@ export function splitIntoChunks(text, maxTokens = 1000, overlap = 200) {
                     mid === lineStarts.length - 1 ||
                     lineStarts[mid + 1] > charIndex
                 ) {
-                    return mid + 1; // line numbers start at 1
+                    return mid + 1;
                 }
                 low = mid + 1;
             } else {
@@ -116,7 +164,6 @@ export function splitIntoChunks(text, maxTokens = 1000, overlap = 200) {
         const endCharIndex = enc.decode(tokens.slice(0, end)).length;
 
         const chunkText = text.slice(startCharIndex, endCharIndex);
-
         const startLine = getLineNumber(startCharIndex);
         const endLine = getLineNumber(endCharIndex);
 
