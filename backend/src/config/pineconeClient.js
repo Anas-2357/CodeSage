@@ -34,7 +34,7 @@ export async function waitForIndexReady(indexName, timeout = 60000) {
         if (description.status?.ready) {
             return true;
         }
-        await new Promise((r) => setTimeout(r, 2000)); // wait 2s
+        await new Promise((r) => setTimeout(r, 2000));
     }
 
     throw new Error("Timed out waiting for Pinecone index to be ready");

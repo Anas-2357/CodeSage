@@ -16,7 +16,10 @@ export const query = async (req, res) => {
         const results = await queryVectors(queryEmbedding, indexName, topK);
 
         const contextText = results
-            .map(match => `File: ${match.metadata.filePath}\n${match.metadata.chunk}`)
+            .map(
+                (match) =>
+                    `File: ${match.metadata.filePath}\n${match.metadata.chunk}`
+            )
             .join("\n---\n");
 
         const compressed = await compressChunksWithGemini(contextText, query);

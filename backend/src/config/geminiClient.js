@@ -1,5 +1,5 @@
-const MAX_INPUT_TOKENS_GEMINI = 30000; // tunable
-const MAX_OUTPUT_TOKENS_GEMINI = 8000; // tunable
+const MAX_INPUT_TOKENS_GEMINI = 30000;
+const MAX_OUTPUT_TOKENS_GEMINI = 8000;
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 

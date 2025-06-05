@@ -39,7 +39,9 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ error: "Email and password required." });
+            return res
+                .status(400)
+                .json({ error: "Email and password required." });
         }
 
         const user = await User.findOne({ email });
@@ -52,7 +54,9 @@ export const login = async (req, res) => {
             return res.status(401).json({ error: "Invalid credentials." });
         }
 
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+            expiresIn: "7d",
+        });
 
         res.status(200).json({
             message: "Login successful",

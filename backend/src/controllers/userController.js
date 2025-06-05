@@ -4,7 +4,7 @@ export const pushUrl = async (req, res) => {
     try {
         const { newUrl } = req.body;
 
-        if (typeof newUrl !== 'string') {
+        if (typeof newUrl !== "string") {
             return res.status(400).json({ error: "newUrl must be a string" });
         }
 
@@ -16,7 +16,10 @@ export const pushUrl = async (req, res) => {
         user.repos.push(newUrl);
         await user.save();
 
-        res.status(200).json({ message: "URL updated successfully", repos: user.repos });
+        res.status(200).json({
+            message: "URL updated successfully",
+            repos: user.repos,
+        });
     } catch (err) {
         console.error("Push URL error:", err);
         res.status(500).json({ error: "Internal server error" });
