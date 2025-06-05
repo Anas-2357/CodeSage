@@ -11,13 +11,13 @@ export function initPinecone() {
     return pinecone;
 }
 
-export async function upsertVectors(client, vectors, indexName) {
-    const index = client.Index(indexName);
+export async function upsertVectors(vectors, indexName) {
+    const index = pinecone.Index(indexName);
     await index.upsert(vectors);
 }
 
-export async function queryVectors(client, vector, indexName, topK = 5) {
-    const index = client.Index(indexName);
+export async function queryVectors(vector, indexName, topK = 5) {
+    const index = pinecone.Index(indexName);
     const queryResponse = await index.query({
         vector,
         topK,
@@ -53,6 +53,5 @@ export async function generateNewIndex(indexName) {
         },
     });
 
-    // Wait for it to be ready (important in some environments)
     await waitForIndexReady(indexName);
 }
