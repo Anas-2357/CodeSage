@@ -5,11 +5,11 @@ const pinecone = initPinecone();
 
 export const ingestRepository = async (req, res) => {
     try {
-        const { repoUrl, namespace, dryrun } = req.body;
+        const { repoUrl, spaceName, dryrun } = req.body;
         if (!repoUrl) {
             return res.status(400).json({ error: "Missing repoUrl" });
         }
-        if (!namespace) {
+        if (!spaceName) {
             return res.status(400).json({ error: "Missing namespace" });
         }
 
@@ -18,8 +18,8 @@ export const ingestRepository = async (req, res) => {
             repoUrl,
             pinecone,
             "codesage-prod",
-            namespace,
-            dryrun
+            spaceName,
+            dryrun,
         );
         res.json(result);
     } catch (err) {

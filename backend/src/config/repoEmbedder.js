@@ -16,9 +16,17 @@ export async function ingestRepo(
     repoUrl,
     pinecone,
     indexName,
-    namespace,
+    spaceName,
     dryRun = true
 ) {
+    const user = await User.findById(userId);
+
+    if (!dryRun && user.repos.has(spaceName)) {
+        return {
+            message: `A space with name ${spaceName} alreay exists`,
+        };
+    }
+
     const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
     const git = simpleGit();
 
@@ -52,8 +60,7 @@ export async function ingestRepo(
         });
     }
 
-    const user = await User.findById(userId);
-    var availableTokens = availableTokens = Number((user.tokens).toFixed(0));
+    var availableTokens = (availableTokens = Number(user.tokens.toFixed(0)));
 
     if (dryRun) {
         return {
@@ -64,9 +71,10 @@ export async function ingestRepo(
         };
     }
 
+    totalTokens = Number((totalTokens / 500).toFixed(0));
+
     // Token quota check
     if (totalTokens > availableTokens) {
-        totalTokens = Number((totalTokens / 500).toFixed(0));
         return {
             message: "❌ Not enough tokens available to process this repo.",
             requiredTokens: totalTokens,
@@ -99,7 +107,20 @@ export async function ingestRepo(
         },
     }));
 
-    await upsertVectors(pinecone, vectors, indexName, namespace);
+    const spaceId = `${spaceName}-${uuidv4()}`;
+
+    await upsertVectors(
+        pinecone,
+        vectors,
+        indexName,
+        spaceName,
+        spaceId,
+        userId
+    );
+
+    user.tokens = user.tokens - totalTokens;
+    await user.save();
+    availableTokens = Number((user.tokens).toFixed(0))
 
     return {
         message: `✅ Ingested ${codeFiles.length} files from repo.`,

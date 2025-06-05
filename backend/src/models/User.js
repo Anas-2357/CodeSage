@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema(
             required: true,
         },
         repos: {
-            type: Array,
+            type: Map,
+            of: String,
             required: false,
         },
     },
