@@ -10,6 +10,10 @@ connectDB();
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+    res.status(200).send("Server is up and running!");
+});
+
 app.use("/auth", authRoutes);
 app.use("/repo", repoRoutes);
 app.use("/query", queryRoutes);
