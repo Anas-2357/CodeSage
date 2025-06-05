@@ -1,6 +1,5 @@
 import express from "express";
 import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
 import repoRoutes from "./routes/repoRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
 import connectDB from "./config/db.js";
@@ -12,7 +11,6 @@ connectDB();
 app.use(express.json());
 
 app.use("/auth", authRoutes);
-app.use("/user", userRoutes);
 app.use("/repo", repoRoutes);
 app.use("/query", queryRoutes);
 
