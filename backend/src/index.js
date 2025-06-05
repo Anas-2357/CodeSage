@@ -8,17 +8,18 @@ if (process.env.NODE_ENV !== "production") {
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import { ingestRepo } from "./repoEmbedder.js";
-import { generateEmbeddings } from "./openaiEmbeddingsClient.js";
+import { ingestRepo } from "./config/repoEmbedder.js";
+import { generateEmbeddings } from "./config/openaiEmbeddingsClient.js";
 import {
     initPinecone,
     upsertVectors,
     queryVectors,
     waitForIndexReady,
     generateNewIndex,
-} from "./pineconeClient.js";
-import { askGPT } from "./openaiClient.js";
-import { compressChunksWithGemini } from "./geminiClient.js";
+} from "./config/pineconeClient.js";
+import { askGPT } from "./config/openaiClient.js";
+import { compressChunksWithGemini } from "./config/geminiClient.js";
+import connectDB from "./config/db.js";
 
 const app = express();
 app.use(cors());
@@ -27,6 +28,8 @@ app.use(bodyParser.json());
 const PORT = process.env.PORT || 8080;
 
 const pinecone = initPinecone();
+
+connectDB();
 
 app.get("/", (req, res) => {
     res.status(200).send("OK");
@@ -66,7 +69,12 @@ app.post("/query", async (req, res) => {
         const queryEmbedding = await generateEmbeddings(query);
 
         // 2. Get topK relevant code chunks
-        const results = await queryVectors(pinecone, queryEmbedding, indexName, topK);
+        const results = await queryVectors(
+            pinecone,
+            queryEmbedding,
+            indexName,
+            topK
+        );
 
         // 3. Extract and format the relevant chunks
         const contextText = results
