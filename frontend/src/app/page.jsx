@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Page() {
     return (
         <div className="h-screen bg-linear-to-t from-[#fd9791] to-[#8657fa] font-poppins pb-[60px] px-[60px]">
@@ -14,9 +16,12 @@ export default function Page() {
                     visualize the logic and data flow with interactive flow
                     charts.
                 </h2>
-                <button className="bg-linear-to-r font-semibold font from-[#fd3e42] to-[#8657fa] text-w px-4 py-2 rounded-md mt-2 cursor-pointer">
+                <Link
+                    href="/spaces"
+                    className="bg-linear-to-r hover:scale-105 focus:scale-95 transition-all duration-200 font-semibold font from-[#fd3e42] to-[#8657fa] text-w px-6 py-3 rounded-md mt-2 cursor-pointer"
+                >
                     Try as guest
-                </button>
+                </Link>
             </div>
         </div>
     );
