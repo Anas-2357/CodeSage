@@ -7,6 +7,10 @@ const repoSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    nameSpace: {
+      type: String,
+      required: true,        
+    },
     repoName: {
       type: String,
       required: true,

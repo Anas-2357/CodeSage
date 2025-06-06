@@ -115,19 +115,20 @@ export async function ingestRepo(
         },
     }));
 
-    const spaceId = `${spaceName}-${uuidv4()}`;
+    const nameSpace = `${spaceName}-${uuidv4()}`;
 
     // Upsert in vector DB
-    await upsertVectors(pinecone, vectors, indexName, spaceId);
+    await upsertVectors(pinecone, vectors, indexName, nameSpace);
 
     const repoName = getRepoNameFromUrl(repoUrl);
 
     const repoData = {
         ownerId: userId,
-        repoName: repoName,
-        repoUrl: repoUrl,
+        nameSpace,
+        repoName,
+        repoUrl,
         isPublic: false,
-        spaceName: spaceName,
+        spaceName,
         totalFiles: codeFiles.length,
         chunksPushed: embeddedChunks.length
     };

@@ -11,8 +11,8 @@ export function initPinecone() {
     return pinecone;
 }
 
-export async function upsertVectors(pinecone, vectors, indexName, spaceId) {
-    const index = pinecone.Index(indexName).namespace(spaceId);
+export async function upsertVectors(pinecone, vectors, indexName, nameSpace) {
+    const index = pinecone.Index(indexName).namespace(nameSpace);
 
     await index.upsert(vectors);
 }
