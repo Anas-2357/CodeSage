@@ -3,6 +3,7 @@ import { queryVectors } from "../config/pineconeClient.js";
 import { compressChunksWithGemini } from "../config/geminiClient.js";
 import { askGPT } from "../config/openaiClient.js";
 import User from "../models/User.js";
+import Repo from "../models/Repo.js";
 
 export const query = async (req, res) => {
     try {
@@ -24,18 +25,29 @@ export const query = async (req, res) => {
             return res.status(400).json({ error: "Missing Space name" });
         }
 
-        if (!(user.repos.has(spaceName))) {
+        const [userRepo, publicRepo] = await Promise.all([
+            Repo.findOne({ ownerId: userId, spaceName }),
+            Repo.findOne({ isPublic: true, spaceName }),
+        ]);
+
+        const nameSpace = null;
+
+        if (userRepo) {
+            nameSpace = userRepo.nameSpace;
+        } else if (publicRepo) {
+            nameSpace = publicRepo.nameSpace
+        }
+
+        if (nameSpace) {
             return res.status(400).json({ error: "This space does not exist" });
         }
 
-        const spaceId = user.repos.get(spaceName);
-
         const queryEmbedding = await generateEmbeddings(query);
         const results = await queryVectors(
-            spaceId,
+            nameSpace,
             queryEmbedding,
             "codesage-prod",
-            topK,
+            topK
         );
 
         const contextText = results

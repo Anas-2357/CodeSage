@@ -17,8 +17,8 @@ export async function upsertVectors(pinecone, vectors, indexName, nameSpace) {
     await index.upsert(vectors);
 }
 
-export async function queryVectors(spaceId, vector, indexName, topK = 5) {
-    const index = pinecone.Index(indexName).namespace(spaceId);
+export async function queryVectors(nameSpace, vector, indexName, topK = 5) {
+    const index = pinecone.Index(indexName).namespace(nameSpace);
     const queryResponse = await index.query({
         vector,
         topK,
