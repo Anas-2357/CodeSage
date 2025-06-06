@@ -11,10 +11,6 @@ const repoSchema = new mongoose.Schema(
       type: String,
       required: true,        
     },
-    repoName: {
-      type: String,
-      required: true,
-    },
     repoUrl: {
       type: String,
     },

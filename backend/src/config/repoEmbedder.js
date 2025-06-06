@@ -120,12 +120,9 @@ export async function ingestRepo(
     // Upsert in vector DB
     await upsertVectors(pinecone, vectors, indexName, nameSpace);
 
-    const repoName = getRepoNameFromUrl(repoUrl);
-
     const repoData = {
         ownerId: userId,
         nameSpace,
-        repoName,
         repoUrl,
         isPublic: false,
         spaceName,
