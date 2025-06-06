@@ -1,5 +1,4 @@
 import { Pinecone } from "@pinecone-database/pinecone";
-import User from "../models/User.js";
 
 let pinecone;
 
@@ -12,18 +11,13 @@ export function initPinecone() {
     return pinecone;
 }
 
-export async function upsertVectors(pinecone, vectors, indexName, spaceName, spaceId, userId) {
-    const index = pinecone.Index(indexName).namespace(spaceName);
+export async function upsertVectors(pinecone, vectors, indexName, spaceId) {
+    const index = pinecone.Index(indexName).namespace(spaceId);
 
     await index.upsert(vectors);
-
-    const user = await User.findById(userId);
-    user.repos.set(spaceName, spaceId)
-    console.log(user.repos)
-    await user.save();
 }
 
-export async function queryVectors(spaceId ,vector, indexName, topK = 5) {
+export async function queryVectors(spaceId, vector, indexName, topK = 5) {
     const index = pinecone.Index(indexName).namespace(spaceId);
     const queryResponse = await index.query({
         vector,

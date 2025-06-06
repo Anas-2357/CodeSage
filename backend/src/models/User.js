@@ -21,11 +21,6 @@ const userSchema = new mongoose.Schema(
             type: Number,
             required: true,
         },
-        repos: {
-            type: Map,
-            of: String,
-            required: false,
-        },
     },
     { timestamps: true }
 );

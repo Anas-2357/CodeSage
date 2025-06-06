@@ -8,6 +8,9 @@ import { upsertVectors } from "./pineconeClient.js";
 import os from "os";
 import { v4 as uuidv4 } from "uuid";
 import User from "../models/User.js";
+import { createAndUpserRepoInDb } from "../services/repoService.js";
+import { getRepoNameFromUrl } from "../utils/urlHelpers.js";
+import Repo from "../models/Repo.js";
 
 const enc = encoding_for_model("text-embedding-3-small");
 
@@ -21,7 +24,12 @@ export async function ingestRepo(
 ) {
     const user = await User.findById(userId);
 
-    if (!dryRun && user.repos.has(spaceName)) {
+    const [userRepo, publicRepo] = await Promise.all([
+        Repo.findOne({ ownerId: userId, spaceName }),
+        Repo.findOne({ isPublic: true, spaceName }),
+    ]);
+
+    if (!dryRun && (userRepo || publicRepo)) {
         return {
             message: `A space with name ${spaceName} alreay exists`,
         };
@@ -60,7 +68,7 @@ export async function ingestRepo(
         });
     }
 
-    var availableTokens = (availableTokens = Number(user.tokens.toFixed(0)));
+    var availableTokens = Number(user.tokens.toFixed(0));
 
     if (dryRun) {
         return {
@@ -109,18 +117,26 @@ export async function ingestRepo(
 
     const spaceId = `${spaceName}-${uuidv4()}`;
 
-    await upsertVectors(
-        pinecone,
-        vectors,
-        indexName,
-        spaceName,
-        spaceId,
-        userId
-    );
+    // Upsert in vector DB
+    await upsertVectors(pinecone, vectors, indexName, spaceId);
+
+    const repoName = getRepoNameFromUrl(repoUrl);
+
+    const repoData = {
+        ownerId: userId,
+        repoName: repoName,
+        repoUrl: repoUrl,
+        isPublic: false,
+        spaceName: spaceName,
+        totalFiles: codeFiles.length,
+        chunksPushed: embeddedChunks.length
+    };
+
+    await createAndUpserRepoInDb(repoData);
 
     user.tokens = user.tokens - totalTokens;
     await user.save();
-    availableTokens = Number((user.tokens).toFixed(0))
+    availableTokens = Number(user.tokens.toFixed(0));
 
     return {
         message: `✅ Ingested ${codeFiles.length} files from repo.`,
