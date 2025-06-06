@@ -1,5 +1,5 @@
 import express from "express";
-import { sendOtp, verifyOtp } from "../controllers/authController.js";
+import { login, sendOtp, verifyOtp } from "../controllers/authController.js";
 import rateLimit from "express-rate-limit";
 
 const registerLimiter = rateLimit({
@@ -22,6 +22,7 @@ const router = express.Router();
 
 router.post("/register", registerLimiter, sendOtp);
 router.post("/verify-otp", verifyOtpLimiter, verifyOtp);
+router.post("/login", login);
 
 
 export default router;
