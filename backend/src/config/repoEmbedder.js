@@ -9,7 +9,6 @@ import os from "os";
 import { v4 as uuidv4 } from "uuid";
 import User from "../models/User.js";
 import { createAndUpserRepoInDb } from "../services/repoService.js";
-import { getRepoNameFromUrl } from "../utils/urlHelpers.js";
 import Repo from "../models/Repo.js";
 
 const enc = encoding_for_model("text-embedding-3-small");
