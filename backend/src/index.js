@@ -5,9 +5,9 @@ import queryRoutes from "./routes/queryRoutes.js";
 import connectDB from "./config/db.js";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 const app = express();
-app.use(cors());
 
 connectDB();
 
@@ -21,6 +21,8 @@ const globalLimiter = rateLimit({
     },
 });
 
+app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(globalLimiter);
 
