@@ -52,3 +52,8 @@ body {
   background-color: var(--color-gray-800);
   border-radius: 12px;
 }
+
+::selection {
+  background-color: #a855f7; /* Tailwind purple-500 */
+  color: #ffffff;
+}
