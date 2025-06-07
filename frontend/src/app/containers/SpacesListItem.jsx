@@ -4,7 +4,7 @@ import React from "react";
 function SpacesListItem({ spaceName, repoUrl, isPublic, spaceId }) {
     return (
         <Link
-            href={`/spaces/${spaceId}`}
+            href={`/spaces/${spaceId}?spacename=${spaceName}&repo=${repoUrl}`}
             className="py-4 px-6 border-1 rounded-md border-gray-800 hover:border-gray-400 transition-all duration-300 cursor-pointer mr-3"
         >
             <div className="flex justify-between">
