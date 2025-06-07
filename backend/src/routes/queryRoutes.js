@@ -1,5 +1,5 @@
 import express from "express";
-import { query } from "../controllers/queryController.js";
+import { guestQuery, query } from "../controllers/queryController.js";
 import { verifyToken } from "../middleware/auth.js";
 import rateLimit from "express-rate-limit";
 
@@ -18,6 +18,6 @@ const guestLimiter = rateLimit({
 const router = express.Router();
 
 router.post("/", verifyToken, query);
-router.post("/guest", guestLimiter, query);
+router.post("/guest", guestLimiter, guestQuery);
 
 export default router;

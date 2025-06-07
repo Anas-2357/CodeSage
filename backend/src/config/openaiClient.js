@@ -2,7 +2,12 @@ import OpenAI from "openai";
 import User from "../models/User.js";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function askGPT(userId, query, contextText, mermaidComplexity) {
+export async function askGPT(
+    query,
+    contextText,
+    mermaidComplexity,
+    userId = null
+) {
     const complexityPara =
         mermaidComplexity === 1
             ? "Each element should be a function name, use as few elements as possible"
@@ -35,17 +40,21 @@ export async function askGPT(userId, query, contextText, mermaidComplexity) {
     const inputTokens = completion.usage.prompt_tokens / 100;
     const outputTokens = completion.usage.completion_tokens / 25;
 
-    const user = await User.findById(userId);
-    user.tokens = user.tokens - (inputTokens + outputTokens);
-    if (user.tokens < 0) user.tokens = 0;
-    await user.save();
+    if (userId) {
+        const user = await User.findById(userId);
+        user.tokens = user.tokens - (inputTokens + outputTokens);
+        if (user.tokens < 0) user.tokens = 0;
+        await user.save();
 
-    const availableTokens = Number((user.tokens).toFixed(0));
-    const totalTokens = Number((inputTokens + outputTokens).toFixed(0));
+        const availableTokens = Number(user.tokens.toFixed(0));
+        const totalTokens = Number((inputTokens + outputTokens).toFixed(0));
 
-    return {
-        response: completion.choices[0].message.content,
-        totalTokens,
-        availableTokens,
-    };
+        return {
+            response: completion.choices[0].message.content,
+            totalTokens,
+            availableTokens,
+        };
+    }
+
+    return {response: completion.choices[0].message.content}
 }
