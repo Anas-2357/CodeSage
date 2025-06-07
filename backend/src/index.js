@@ -4,8 +4,10 @@ import repoRoutes from "./routes/repoRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
 import connectDB from "./config/db.js";
 import rateLimit from "express-rate-limit";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 
 connectDB();
 
