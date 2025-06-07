@@ -4,38 +4,47 @@ const data = [
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: false,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
+        isPublic: true,
     },
 ];
 
@@ -50,6 +59,7 @@ function Page() {
                             key={index}
                             spaceName={object.spaceName}
                             repoUrl={object.repoUrl}
+                            isPublic={object.isPublic}
                         />
                     ))}
                 </div>
