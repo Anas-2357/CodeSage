@@ -5,46 +5,55 @@ const data = [
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: false,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
     {
         repoUrl: "https://github.com/Anas-2357/Script-Type",
         spaceName: "Good Space",
         isPublic: true,
+        spaceId: "ABCD",
     },
 ];
 
@@ -60,6 +69,7 @@ function Page() {
                             spaceName={object.spaceName}
                             repoUrl={object.repoUrl}
                             isPublic={object.isPublic}
+                            spaceId={object.spaceId}
                         />
                     ))}
                 </div>
