@@ -87,9 +87,24 @@ export const verifyOtp = async (req, res) => {
 
         await OtpVerification.deleteOne({ _id: record._id });
 
-        res.status(201).json({
-            message: "Email verified and user registered.",
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+            expiresIn: "7d",
         });
+
+        const res = NextResponse.json(
+            { message: "Email verified and user registered." },
+            { status: 201 }
+        );
+
+        res.cookies.set("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
+        });
+
+        return res;
     } catch (err) {
         console.error("Verify OTP error:", err);
         res.status(500).json({ error: "Internal server error" });
@@ -120,15 +135,27 @@ export const login = async (req, res) => {
             expiresIn: "7d",
         });
 
-        res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
+        const res = NextResponse.json(
+            {
+                message: "Login successful",
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                },
             },
+            { status: 201 }
+        );
+
+        res.cookies.set("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
         });
+
+        return res;
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ error: "Internal server error" });
