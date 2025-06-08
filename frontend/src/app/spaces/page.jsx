@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import SpacesListItem from "../containers/SpacesListItem";
 import { useRouter } from "next/navigation";
+import { CreateSpace } from "../containers/CreateSpace";
 
 function Page() {
     const [spaces, setSpaces] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [createSpace, setCreateSpace] = useState(false);
     const router = useRouter();
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -39,7 +41,12 @@ function Page() {
     return (
         <div className="flex h-screen w-screen justify-center items-center overflow-hidden">
             <div className="h-[80vh] w-[50vw] flex flex-col gap-6 p-8 border-2 border-gray-800 rounded-md">
-                <h1 className="text-4xl">Spaces</h1>
+                <div className="flex justify-between items-center">
+                    <h1 className="text-4xl">Spaces</h1>
+                    <button className="text-sm cursor-pointer" onClick={() => {setCreateSpace(true)}}>
+                        new space
+                    </button>
+                </div>
 
                 {loading ? (
                     <div className="text-center text-gray-500">Loading...</div>
@@ -57,6 +64,7 @@ function Page() {
                     </div>
                 )}
             </div>
+            {createSpace && <CreateSpace setCreateSpace={setCreateSpace} />}
         </div>
     );
 }

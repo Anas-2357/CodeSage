@@ -87,7 +87,7 @@ export default function SpacePage() {
 
         try {
             const res = await fetch(
-                "https://codesage-production.up.railway.app/query",
+                "http://localhost:8080/query/guest",
                 {
                     method: "POST",
                     headers: {
@@ -97,12 +97,22 @@ export default function SpacePage() {
                     body: JSON.stringify({
                         query: inputValue,
                         spaceId,
+                        spaceName: 'New',
                     }),
                 }
             );
 
             const data = await res.json();
-            const raw = data.answer || "";
+            
+
+            if(data.error){
+                console.log(data.error)
+                // Can use some other way to show error
+                setDiagramCode(data.error)
+                return;
+            }
+
+            const raw = data.response || "";
             console.log(raw);
             const sanitized = extractAndSanitizeMermaid(raw);
 
