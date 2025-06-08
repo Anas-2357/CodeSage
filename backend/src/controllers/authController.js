@@ -97,7 +97,7 @@ export const verifyOtp = async (req, res) => {
             secure: true,
             sameSite: "None",
             path: "/",
-            maxAge: 60 * 60 * 24 * 7,
+            maxAge: 1000 * 60 * 60 * 24 * 7,
         });
 
         return res.status(201).json({
@@ -139,7 +139,7 @@ export const login = async (req, res) => {
             secure: true,
             sameSite: "None",
             path: "/",
-            maxAge: 60 * 60 * 24 * 7,
+            maxAge: 1000 * 60 * 60 * 24 * 7,
         });
 
         return res.status(200).json({
