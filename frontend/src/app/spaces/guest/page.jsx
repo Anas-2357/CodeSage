@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import SpacesListItem from "../containers/SpacesListItem";
+import SpacesListItem from "../../containers/SpacesListItem";
 
 function Page() {
     const [spaces, setSpaces] = useState([]);
@@ -11,7 +11,7 @@ function Page() {
     useEffect(() => {
     const fetchSpaces = async () => {
         try {
-            const res = await fetch(`${apiUrl}/spaces`, {
+            const res = await fetch(`${apiUrl}/spaces/guest`, {
                 credentials: "include",
             });
 
