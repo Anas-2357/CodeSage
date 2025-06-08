@@ -37,7 +37,7 @@ function Page() {
                 {loading ? (
                     <div className="text-center text-gray-500">Loading...</div>
                 ) : (
-                    <div className="flex flex-col gap-2 overflow-y-scroll">
+                    <div className="flex flex-col gap-2 overflow-y-auto">
                         {spaces.map((object, index) => (
                             <SpacesListItem
                                 key={index}
