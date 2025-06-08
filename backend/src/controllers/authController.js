@@ -94,7 +94,8 @@ export const verifyOtp = async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "Strict",
+            secure: true,
+            sameSite: "None",
             path: "/",
             maxAge: 60 * 60 * 24 * 7,
         });
@@ -135,7 +136,8 @@ export const login = async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "Strict",
+            secure: true,
+            sameSite: "None",
             path: "/",
             maxAge: 60 * 60 * 24 * 7,
         });
