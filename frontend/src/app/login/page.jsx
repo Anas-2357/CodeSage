@@ -10,6 +10,7 @@ export default function LoginPage({ redirectTo = "/spaces" }) {
     const [password, setPassword] = useState("");
     const [passwordType, setPasswordType] = useState("password");
     const [loading, setLoading] = useState(false);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const handlePasswordVisibilityClick = () => {
         setPasswordType(passwordType === "password" ? "text" : "password");
@@ -18,7 +19,7 @@ export default function LoginPage({ redirectTo = "/spaces" }) {
     const handleLogin = async () => {
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:8080/auth/login", {
+            const res = await fetch(`${apiUrl}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

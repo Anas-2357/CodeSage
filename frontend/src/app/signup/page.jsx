@@ -14,6 +14,7 @@ export default function SignupPage({ redirectTo = "/spaces" }) {
     const [otp, setOtp] = useState("");
     const [emailForOtp, setEmailForOtp] = useState("");
     const [loading, setLoading] = useState(false);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const handlePasswordVisibilityClick = () => {
         setPasswordType(passwordType === "password" ? "text" : "password");
@@ -22,7 +23,7 @@ export default function SignupPage({ redirectTo = "/spaces" }) {
     const handleSignup = async () => {
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:8080/auth/register", {
+            const res = await fetch(`${apiUrl}/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -49,7 +50,7 @@ export default function SignupPage({ redirectTo = "/spaces" }) {
     const handleVerifyOtp = async () => {
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:8080/auth/verify-otp", {
+            const res = await fetch(`${apiUrl}/auth/verify-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
