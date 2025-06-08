@@ -24,7 +24,10 @@ const globalLimiter = rateLimit({
 
 app.use(
     cors({
-        origin: "http://localhost:3000",
+        origin: [
+            "http://localhost:3000",
+            "https://codesage-production.up.railway.app",
+        ],
         credentials: true,
     })
 );
