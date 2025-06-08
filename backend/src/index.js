@@ -26,7 +26,7 @@ app.use(
     cors({
         origin: [
             "http://localhost:3000",
-            "https://codesage-production.up.railway.app",
+            "https://code-sage-pearl.vercel.app",
         ],
         credentials: true,
     })
