@@ -126,7 +126,7 @@ export async function ingestRepo(
         isPublic: false,
         spaceName,
         totalFiles: codeFiles.length,
-        chunksPushed: embeddedChunks.length
+        chunksPushed: embeddedChunks.length,
     };
 
     await createAndUpserRepoInDb(repoData);
@@ -150,7 +150,9 @@ function getAllCodeFiles(dir, allFiles = []) {
             getAllCodeFiles(fullPath, allFiles);
         } else if (
             entry.isFile() &&
-            /\.(js|ts|jsx|tsx|py|java|md|json|html|css)$/.test(entry.name)
+            /\.(js|ts|jsx|tsx|py|java|kt|rb|go|rs|cpp|cc|cxx|c|h|php|swift|cs|dart|json|ya?ml|md|txt|rst|html|css|scss|sass|vue|env|lock|config\.\w+)$/.test(
+                entry.name
+            )
         ) {
             allFiles.push(fullPath);
         }
