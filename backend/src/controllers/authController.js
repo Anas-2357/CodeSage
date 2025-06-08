@@ -87,7 +87,7 @@ export const verifyOtp = async (req, res) => {
 
         await OtpVerification.deleteOne({ _id: record._id });
 
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+        const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
             expiresIn: "7d",
         });
 
