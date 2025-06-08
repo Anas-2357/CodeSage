@@ -3,13 +3,9 @@ import Repo from "../models/Repo.js";
 export const getUserSpaces = async (req, res) => {
     try {
         const userId = req.user?.id;
-        if (!userId) {
-            return res
-                .status(401)
-                .json({ error: "Unauthorized", isPublic: true });
-        }
 
-        const spaces = await Repo.find({ userId });
+        var spaces = await Repo.find({ userId });
+        spaces = [...spaces, ...(await Repo.find({ isPublic: true }))];
 
         const formatted = spaces.map((space) => ({
             repoUrl: space.repoUrl,
