@@ -37,11 +37,14 @@ export async function ingestRepo(
     const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
     const git = simpleGit();
 
-    console.log("Cloning repo...");
+    console.time("git-clone");
     await git.clone(repoUrl, tempDir);
+    console.timeEnd("git-clone");
 
-    console.log("Reading code files...");
+    console.time("read-files");
     const codeFiles = getAllCodeFiles(tempDir);
+    console.timeEnd("read-files");
+
     const allChunks = [];
 
     let totalTokens = 0;
@@ -70,6 +73,7 @@ export async function ingestRepo(
     var availableTokens = Number(user.tokens.toFixed(0));
 
     if (dryRun) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
         return {
             message: "✅ Dry run complete. Enough tokens available.",
             estimatedTokenCount: Math.ceil(totalTokens / 500),
@@ -90,6 +94,7 @@ export async function ingestRepo(
     }
 
     // Proceed with embeddings
+    console.time("generate-embeddings");
     const limit = pLimit(100);
     const embeddingPromises = allChunks.map((chunk) =>
         limit(() =>
@@ -101,6 +106,7 @@ export async function ingestRepo(
     );
 
     const embeddedChunks = await Promise.all(embeddingPromises);
+    console.timeEnd("generate-embeddings");
 
     const vectors = embeddedChunks.map((chunk) => ({
         id: chunk.id,
@@ -117,7 +123,9 @@ export async function ingestRepo(
     const nameSpace = `${spaceName}-${uuidv4()}`;
 
     // Upsert in vector DB
+    console.time("generate-embeddings");
     await upsertVectors(pinecone, vectors, indexName, nameSpace);
+    console.timeEnd("generate-embeddings");
 
     const repoData = {
         ownerId: userId,
@@ -134,6 +142,7 @@ export async function ingestRepo(
     user.tokens = user.tokens - totalTokens;
     await user.save();
     availableTokens = Number(user.tokens.toFixed(0));
+    fs.rmSync(tempDir, { recursive: true, force: true });
 
     return {
         message: `✅ Ingested ${codeFiles.length} files from repo.`,
