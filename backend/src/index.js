@@ -2,6 +2,7 @@ import express from "express";
 import authRoutes from "./routes/authRoutes.js";
 import repoRoutes from "./routes/repoRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
+import spacesRoutes from "./routes/spacesRoutes.js";
 import connectDB from "./config/db.js";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/repo", repoRoutes);
 app.use("/query", queryRoutes);
+app.use("/spaces", spacesRoutes);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
