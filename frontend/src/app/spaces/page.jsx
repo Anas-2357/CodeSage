@@ -1,31 +1,38 @@
 "use client";
 import { useEffect, useState } from "react";
 import SpacesListItem from "../containers/SpacesListItem";
+import { useRouter } from "next/navigation";
 
 function Page() {
     const [spaces, setSpaces] = useState([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     useEffect(() => {
-    const fetchSpaces = async () => {
-        try {
-            const res = await fetch(`${apiUrl}/spaces`, {
-                credentials: "include",
-            });
+        const fetchSpaces = async () => {
+            try {
+                const res = await fetch(`${apiUrl}/spaces`, {
+                    credentials: "include",
+                });
 
-            const json = await res.json();
-            setSpaces(json.spaces);
-        } catch (err) {
-            console.error("Failed to fetch spaces:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+                if (res.status === 401 || res.status === 403) {
+                    router.push("/login");
+                    return;
+                }
 
-    fetchSpaces();
-}, []);
+                const json = await res.json();
+                setSpaces(json.spaces);
+            } catch (err) {
+                console.error("Failed to fetch spaces:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSpaces();
+    }, []);
 
     if (loading) return <p>Loading spaces...</p>;
 
