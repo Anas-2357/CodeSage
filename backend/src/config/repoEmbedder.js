@@ -48,11 +48,15 @@ export async function ingestRepo(
     const allChunks = [];
 
     let totalTokens = 0;
+    let totalLines = 0;
 
     // First pass: collect chunks and count total tokens
     for (const file of codeFiles) {
         const content = fs.readFileSync(file, "utf-8");
         const chunks = splitIntoChunks(content);
+        const linesInFile = content.split("\n").length;
+        totalLines += linesInFile;
+
         const tokensInFile = chunks.reduce(
             (sum, chunk) => sum + enc.encode(chunk.text).length,
             0
@@ -79,6 +83,7 @@ export async function ingestRepo(
             estimatedTokenCount: Math.ceil(totalTokens / 500),
             availableTokens,
             totalFiles: codeFiles.length,
+            totalLines,
         };
     }
 
@@ -90,6 +95,7 @@ export async function ingestRepo(
             message: "❌ Not enough tokens available to process this repo.",
             requiredTokens: totalTokens,
             availableTokens,
+            totalLines,
         };
     }
 
@@ -135,6 +141,7 @@ export async function ingestRepo(
         spaceName,
         totalFiles: codeFiles.length,
         chunksPushed: embeddedChunks.length,
+        totalLines,
     };
 
     await createAndUpserRepoInDb(repoData);
@@ -148,6 +155,7 @@ export async function ingestRepo(
         message: `✅ Ingested ${codeFiles.length} files from repo.`,
         totalTokens,
         availableTokens,
+        totalLines,
     };
 }
 

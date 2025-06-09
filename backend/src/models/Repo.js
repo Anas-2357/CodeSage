@@ -25,7 +25,8 @@ const repoSchema = new mongoose.Schema(
       lowercase: true,
     },
     totalFiles: Number,
-    chunksPushed: Number
+    chunksPushed: Number,
+    totalLines: Number,
   },
   { timestamps: true }
 );
