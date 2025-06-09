@@ -127,6 +127,7 @@ export const CreateSpace = ({ setCreateSpace }) => {
                                     </strong>
                                 </p>
                                 <p>Total Files: {dryRunResult.totalFiles}</p>
+                                <p>Total Lines: {dryRunResult.totalLines}</p>
                                 <p>
                                     Available Tokens:{" "}
                                     {dryRunResult.availableTokens}
