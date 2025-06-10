@@ -12,11 +12,29 @@ mermaid.initialize({
         nodeSpacing: 60,
         rankSpacing: 40,
         useMaxWidth: false,
-        // disable link gradients for cleaner look:
         linkStyle: "stroke:#34d399;stroke-width:1.5px;",
     },
-    securityLevel: "loose", // if you trust input (optional)
+    securityLevel: "loose",
 });
+
+function extractMetaDataFromText(text) {
+    // Remove all mermaid code blocks
+    const withoutMermaid = text.replace(/```mermaid[\s\S]*?```/gi, "");
+
+    // Match the first JSON code block
+    const match = withoutMermaid.match(/```json\s*([\s\S]*?)\s*```/i);
+
+    if (!match || match.length < 2) {
+        throw new Error("No valid JSON code block found.");
+    }
+
+    try {
+        const json = JSON.parse(match[1]);
+        return json;
+    } catch (e) {
+        throw new Error("Found code block but failed to parse JSON.");
+    }
+}
 
 function extractAndSanitizeMermaid(code) {
     const match = code.match(/```mermaid\s+([\s\S]*?)```/);
@@ -73,6 +91,7 @@ export default function SpacePage() {
     const { slug } = useParams();
     const [inputValue, setInputValue] = useState("");
     const [diagramCode, setDiagramCode] = useState("");
+    const [metaData, setMetaData] = useState("");
     const [loading, setLoading] = useState(false);
     const containerRef = useRef(null);
     const searchParams = useSearchParams();
@@ -86,41 +105,39 @@ export default function SpacePage() {
         setDiagramCode("");
 
         try {
-            const res = await fetch(
-                "http://localhost:8080/query/guest",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-
-                    },
-                    body: JSON.stringify({
-                        query: inputValue,
-                        spaceId,
-                        spaceName: 'New',
-                    }),
-                }
-            );
+            const res = await fetch("http://localhost:8080/query", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    query: inputValue,
+                    spaceId,
+                    spaceName,
+                }),
+                credentials: "include",
+            });
 
             const data = await res.json();
-            
 
-            if(data.error){
-                console.log(data.error)
+            if (data.error) {
+                console.log(data.error);
                 // Can use some other way to show error
-                setDiagramCode(data.error)
+                setDiagramCode(data.error);
                 return;
             }
 
             const raw = data.response || "";
             console.log(raw);
             const sanitized = extractAndSanitizeMermaid(raw);
+            const sanitizedMetaData = extractMetaDataFromText(raw);
+            setMetaData(sanitizedMetaData);
 
             if (sanitized && isValidMermaid(sanitized)) {
                 setDiagramCode(sanitized);
             } else {
                 setDiagramCode(
-                    "Error: No valid Mermaid diagram found or syntax invalid."
+                    "Error: Unexpected response from server, please try again"
                 );
             }
         } catch (err) {
@@ -153,11 +170,13 @@ export default function SpacePage() {
 
                     // Add tooltips to all nodes and edges
                     svgEl.querySelectorAll("g.node, g.edge").forEach((el) => {
+                        const id = el.id.split("-")[1];
                         const title = document.createElementNS(
                             "http://www.w3.org/2000/svg",
                             "title"
                         );
-                        title.textContent = "This is a tool tip";
+                        const titleContent = `Description: ${metaData[id]?.description}\nFuntion: ${metaData[id]?.function}\nFile Path: ${metaData[id]?.filePath}\nLine Number: ${metaData[id]?.startLine}`;
+                        title.textContent = titleContent;
                         el.appendChild(title);
                     });
                 }
@@ -171,7 +190,9 @@ export default function SpacePage() {
         <div className="w-full h-screen flex flex-col py-8 items-center gap-18 bg-[#121212] text-white">
             <div className="flex justify-between w-[70vw]">
                 <p className="text-2xl">{spaceName}</p>
-                <a href={repoUrl} target="_blank" className="text-gray-600">{repoUrl}</a>
+                <a href={repoUrl} target="_blank" className="text-gray-600">
+                    {repoUrl}
+                </a>
             </div>
             <div className="w-full max-w-[70vw] space-y-6">
                 <div className="flex items-center max-w-[60vw] mb-12 mx-auto">

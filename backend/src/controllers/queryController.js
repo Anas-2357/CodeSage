@@ -30,7 +30,7 @@ export const query = async (req, res) => {
             Repo.findOne({ isPublic: true, spaceName }),
         ]);
 
-        const nameSpace = null;
+        var nameSpace = null;
 
         if (userRepo) {
             nameSpace = userRepo.nameSpace;
@@ -38,17 +38,22 @@ export const query = async (req, res) => {
             nameSpace = publicRepo.nameSpace
         }
 
-        if (nameSpace) {
+        if (!nameSpace) {
             return res.status(400).json({ error: "This space does not exist" });
         }
 
+        console.time("Embed Query");
         const queryEmbedding = await generateEmbeddings(query);
+        console.timeEnd("Embed Query");
+
+        console.time("Query Vectors");
         const results = await queryVectors(
             nameSpace,
             queryEmbedding,
             "codesage-prod",
             topK
         );
+        console.timeEnd("Query Vectors");
 
         const contextText = results
             .map(
@@ -57,13 +62,18 @@ export const query = async (req, res) => {
             )
             .join("\n---\n");
 
+        console.time("Request GIMINI");
         const compressed = await compressChunksWithGemini(contextText, query);
+        console.timeEnd("Request GIMINI");
+        
+        console.time("Request GPT");
         const gptResponse = await askGPT(
-            userId,
             query,
             compressed,
-            mermaidComplexity
+            mermaidComplexity,
+            userId,
         );
+        console.timeEnd("Request GPT");
 
         res.json(gptResponse);
     } catch (err) {
