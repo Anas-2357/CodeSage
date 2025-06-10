@@ -142,7 +142,7 @@ export default function SpacePage() {
             }
         } catch (err) {
             console.error("Error fetching from backend:", err);
-            setDiagramCode("Error: Failed to fetch data from backend.");
+            setDiagramCode("Error: Unexpected response from server, please try again");
         } finally {
             setLoading(false);
         }
@@ -175,7 +175,7 @@ export default function SpacePage() {
                             "http://www.w3.org/2000/svg",
                             "title"
                         );
-                        const titleContent = `Description: ${metaData[id]?.description}\nFuntion: ${metaData[id]?.function}\nFile Path: ${metaData[id]?.filePath}\nLine Number: ${metaData[id]?.startLine}`;
+                        const titleContent = `Description: ${metaData[id]?.description}\n\nFuntion: ${metaData[id]?.function}\n\nFile Path: ${metaData[id]?.filePath}\n\nLine Number: ${metaData[id]?.startLine}`;
                         title.textContent = titleContent;
                         el.appendChild(title);
                     });

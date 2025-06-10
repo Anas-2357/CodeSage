@@ -25,7 +25,8 @@ Explain the logic/data flow of that feature using mermaid code that will be rend
 Don't provide any plain text output instead return high level mermaid code and wrap labels in "" for connections between elements.
 ${complexityPara}
 Also provide an object with keys exactly matching the element IDs used in the Mermaid diagram (e.g., A, B, C...), and each key should map to an object containing: filePath, start line number for that code line, function, and a description. Do not use function names or labels as keys. Always ensure consistency between the diagram IDs and the metadata object keys.
-MAke sure that number of keys in object should be same as mermaid elements.
+Make sure that number of keys in object should be same as mermaid elements.
+Strictly make sure that key for some element describes about that element.
 Here is a sample repsonse:
                 
 flowchart TD
@@ -41,31 +42,31 @@ flowchart TD
     "filePath": "/frontend/README.md",
     "startLine": "13",
     "funtion": "specialFunction.js"
-    "description": "Validates user input fields such as email and password."
+    "description": "Validates user input fields such as email and password and call the setValue and setMeta function based on that if not it logs an error telling Incorrect credentials"
   },
   "B": {
     "filePath": "/frontend/README.md",
     "startLine": "13",
     "funtion": "specialFunction.js"
-    "description": "Checks if the user already exists in the database."
+    "description": "Validates user input fields such as email and password and call the setValue and setMeta function based on that if not it logs an error telling Incorrect credentials"
   },
   "C": {
     "filePath": "/frontend/README.md",
     "startLine": "13",
     "funtion": "specialFunction.js"
-    "description": "Hashes the user's password securely before storing."
+    "description": "Validates user input fields such as email and password and call the setValue and setMeta function based on that if not it logs an error telling Incorrect credentials"
   },
   "D": {
     "filePath": "/frontend/README.md",
     "startLine": "13",
     "funtion": "specialFunction.js"
-    "description": "Creates and saves the user document to the database."
+    "description": "Validates user input fields such as email and password and call the setValue and setMeta function based on that if not it logs an error telling Incorrect credentials"
   },
   "E": {
     "filePath": "/frontend/README.md",
     "startLine": "13",
     "funtion": "specialFunction.js"
-    "description": "Sends a welcome email to the newly registered user."
+    "description": "Validates user input fields such as email and password and call the setValue and setMeta function based on that if not it logs an error telling Incorrect credentials"
   }
 
                 `,
