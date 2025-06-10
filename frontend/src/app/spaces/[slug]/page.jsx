@@ -142,7 +142,9 @@ export default function SpacePage() {
             }
         } catch (err) {
             console.error("Error fetching from backend:", err);
-            setDiagramCode("Error: Unexpected response from server, please try again");
+            setDiagramCode(
+                "Error: Unexpected response from server, please try again"
+            );
         } finally {
             setLoading(false);
         }
@@ -171,13 +173,15 @@ export default function SpacePage() {
                     // Add tooltips to all nodes and edges
                     svgEl.querySelectorAll("g.node, g.edge").forEach((el) => {
                         const id = el.id.split("-")[1];
-                        const title = document.createElementNS(
-                            "http://www.w3.org/2000/svg",
-                            "title"
-                        );
-                        const titleContent = `Description: ${metaData[id]?.description}\n\nFuntion: ${metaData[id]?.function}\n\nFile Path: ${metaData[id]?.filePath}\n\nLine Number: ${metaData[id]?.startLine}`;
-                        title.textContent = titleContent;
-                        el.appendChild(title);
+                        if (metaData[id]) {
+                            const title = document.createElementNS(
+                                "http://www.w3.org/2000/svg",
+                                "title"
+                            );
+                            const titleContent = `Description: ${metaData[id]?.description}\n\nFuntion: ${metaData[id]?.function}\n\nFile Path: ${metaData[id]?.filePath}\n\nLine Number: ${metaData[id]?.startLine}`;
+                            title.textContent = titleContent;
+                            el.appendChild(title);
+                        }
                     });
                 }
             })
