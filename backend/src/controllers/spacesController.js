@@ -4,8 +4,9 @@ export const getUserSpaces = async (req, res) => {
     try {
         const userId = req.user?.id;
 
-        var spaces = await Repo.find({ userId });
-        spaces = [...spaces, ...(await Repo.find({ isPublic: true }))];
+        var spaces = await Repo.find({ userId, isPublic: false });
+        spaces =[...spaces, ...(await Repo.find({ userId, isPublic: true }))];
+        spaces = [...spaces, ...(await Repo.find({ isPublic: true, userId: { $ne: userId } }))];
 
         const formatted = spaces.map((space) => ({
             repoUrl: space.repoUrl,
