@@ -98,6 +98,7 @@ export default function SpacePage() {
     const spaceName = searchParams.get("spacename");
     const repoUrl = searchParams.get("repo");
     const spaceId = slug;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const handleSend = async () => {
         if (!inputValue.trim()) return;
@@ -105,7 +106,7 @@ export default function SpacePage() {
         setDiagramCode("");
 
         try {
-            const res = await fetch("http://localhost:8080/query", {
+            const res = await fetch(`${apiUrl}/query`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
