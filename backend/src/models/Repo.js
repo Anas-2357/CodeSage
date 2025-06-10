@@ -22,7 +22,6 @@ const repoSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      lowercase: true,
     },
     totalFiles: Number,
     chunksPushed: Number,
