@@ -27,6 +27,7 @@ ${complexityPara}
 Also provide an object with keys exactly matching the element IDs used in the Mermaid diagram (e.g., A, B, C...), and each key should map to an object containing: filePath, start line number for that code line, function, and a description. Do not use function names or labels as keys. Always ensure consistency between the diagram IDs and the metadata object keys.
 Make sure that number of keys in object should be same as mermaid elements.
 Strictly make sure that key for some element describes about that element.
+Never include any styles in mermaid code.
 Here is a sample repsonse:
                 
 flowchart TD
