@@ -127,7 +127,7 @@ export async function ingestRepo(
 
     // Proceed with embeddings
     console.time("generate-embeddings");
-    const limit = pLimit(100);
+    const limit = pLimit(20);
     const embeddingPromises = allChunks.map((chunk) =>
         limit(() =>
             generateEmbeddings([chunk.text]).then((embeddings) => ({
