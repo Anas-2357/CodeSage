@@ -13,6 +13,32 @@ import Repo from "../models/Repo.js";
 
 const enc = encoding_for_model("text-embedding-3-small");
 
+const IGNORE_DIRS = [
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  'out',
+  '.next',
+  'coverage',
+  '.turbo',
+  '.vscode',
+  '.idea',
+  '.cache',
+  '.vercel',
+  '.firebase',
+  'android',
+  'ios',
+  '.expo',
+  '__pycache__',
+  '.pytest_cache',
+  '.venv',
+  'env',
+  'tmp',
+  'logs',
+  'bin'
+];
+
 export async function ingestRepo(
     userId,
     repoUrl,
@@ -164,6 +190,7 @@ function getAllCodeFiles(dir, allFiles = []) {
     for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) {
+            if (IGNORE_DIRS.includes(entry.name)) continue;
             getAllCodeFiles(fullPath, allFiles);
         } else if (
             entry.isFile() &&
