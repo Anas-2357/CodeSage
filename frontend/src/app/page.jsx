@@ -16,12 +16,20 @@ export default function Page() {
                     visualize the logic and data flow with interactive flow
                     charts.
                 </h2>
-                <Link
-                    href="/spaces"
-                    className="bg-linear-to-r hover:scale-105 focus:scale-95 transition-all duration-200 font-semibold font from-[#fd3e42] to-[#8657fa] text-w px-6 py-3 rounded-md mt-2 cursor-pointer"
-                >
-                    Try as guest
-                </Link>
+                <div className="flex gap-6 mt-6">
+                    <Link
+                        href="/spaces"
+                        className="bg-linear-to-r hover:scale-105 focus:scale-95 transition-all duration-200 font-semibold font from-[#fd3e42] to-[#8657fa] text-w px-6 py-3 rounded-md mt-2 cursor-pointer"
+                    >
+                        Go to spaces
+                    </Link>
+                    <Link
+                        href="/spaces/guest"
+                        className="bg-linear-to-r hover:scale-105 focus:scale-95 transition-all duration-200 font-semibold font from-[#fd3e42] to-[#8657fa] text-w px-6 py-3 rounded-md mt-2 cursor-pointer"
+                    >
+                        Try as guest
+                    </Link>
+                </div>
             </div>
         </div>
     );

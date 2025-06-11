@@ -9,25 +9,28 @@ function Page() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     useEffect(() => {
-    const fetchSpaces = async () => {
-        try {
-            const res = await fetch(`${apiUrl}/spaces/guest`, {
-                credentials: "include",
-            });
+        const fetchSpaces = async () => {
+            try {
+                const res = await fetch(`${apiUrl}/spaces/guest`);
 
-            const json = await res.json();
-            setSpaces(json.spaces);
-        } catch (err) {
-            console.error("Failed to fetch spaces:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+                const json = await res.json();
+                setSpaces(json.spaces);
+            } catch (err) {
+                console.error("Failed to fetch spaces:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    fetchSpaces();
-}, []);
+        fetchSpaces();
+    }, []);
 
-    if (loading) return <p>Loading spaces...</p>;
+    if (loading)
+        return (
+            <div className="h-screen w-screen flex justify-center items-center">
+                <p className="text-2xl">Loading spaces...</p>
+            </div>
+        );
 
     return (
         <div className="flex h-screen w-screen justify-center items-center overflow-hidden">
@@ -45,6 +48,7 @@ function Page() {
                                 repoUrl={object.repoUrl}
                                 isPublic={object.isPublic}
                                 spaceId={object.spaceId}
+                                redirectTo={"/spaces/guest"}
                             />
                         ))}
                     </div>

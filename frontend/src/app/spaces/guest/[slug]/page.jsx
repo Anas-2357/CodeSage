@@ -173,8 +173,8 @@ export default function SpacePage() {
                 <p className="text-2xl">{spaceName}</p>
                 <a href={repoUrl} target="_blank" className="text-gray-600">{repoUrl}</a>
             </div>
-            <div className="w-full max-w-[70vw] space-y-6">
-                <div className="flex items-center max-w-[60vw] mb-12 mx-auto">
+            <div className="w-full max-w-[70vw] space-y-6 flex flex-col items-center">
+                <div className="flex items-center max-w-[60vw] mb-12 mx-auto w-full">
                     <input
                         className="flex-grow px-4 py-2 border border-gray-700 rounded-sm mr-4 bg-[#1e1e1e] text-white"
                         type="text"
@@ -193,7 +193,7 @@ export default function SpacePage() {
                     </button>
                 </div>
 
-                <div className="bg-[#1a1a1a] p-4 rounded overflow-auto">
+                <div className="bg-[#C5D8D1] p-4 min-h-24 min-w-24 rounded-2xl">
                     <div ref={containerRef} />
                 </div>
             </div>

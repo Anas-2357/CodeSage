@@ -170,6 +170,7 @@ export default function SpacePage() {
                     svgEl.style.height = "auto";
                     svgEl.style.borderRadius = "0.5rem";
                     svgEl.style.backgroundColor = "#121212";
+                    svgEl.style.padding = "50px";
 
                     // Add tooltips to all nodes and edges
                     svgEl.querySelectorAll("g.node, g.edge").forEach((el) => {
@@ -192,15 +193,15 @@ export default function SpacePage() {
             });
     }, [diagramCode]);
     return (
-        <div className="w-full h-screen flex flex-col py-8 items-center gap-18 bg-[#121212] text-white">
+        <div className="w-full min-h-screen flex flex-col py-8 items-center gap-18 bg-[#121212] text-white">
             <div className="flex justify-between w-[70vw]">
                 <p className="text-2xl">{spaceName}</p>
                 <a href={repoUrl} target="_blank" className="text-gray-600">
                     {repoUrl}
                 </a>
             </div>
-            <div className="w-full max-w-[70vw] space-y-6">
-                <div className="flex items-center max-w-[60vw] mb-12 mx-auto">
+            <div className="w-full max-w-[70vw] space-y-6 flex flex-col items-center">
+                <div className="flex items-center max-w-[60vw] w-full mb-12 mx-auto">
                     <input
                         className="flex-grow px-4 py-2 border border-gray-700 rounded-sm mr-4 bg-[#1e1e1e] text-white"
                         type="text"
@@ -219,7 +220,7 @@ export default function SpacePage() {
                     </button>
                 </div>
 
-                <div className="bg-[#1a1a1a] p-4 rounded overflow-auto">
+                <div className="bg-[#C5D8D1] p-4 min-h-24 min-w-24 rounded-2xl">
                     <div ref={containerRef} />
                 </div>
             </div>

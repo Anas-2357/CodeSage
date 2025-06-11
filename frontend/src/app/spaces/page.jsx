@@ -36,14 +36,24 @@ function Page() {
         fetchSpaces();
     }, []);
 
-    if (loading) return <p>Loading spaces...</p>;
+    if (loading)
+        return (
+            <div className="h-screen w-screen flex justify-center items-center">
+                <p className="text-2xl">Loading spaces...</p>
+            </div>
+        );
 
     return (
         <div className="flex h-screen w-screen justify-center items-center overflow-hidden">
             <div className="h-[80vh] w-[50vw] flex flex-col gap-6 p-8 border-2 border-gray-800 rounded-md">
                 <div className="flex justify-between items-center">
                     <h1 className="text-4xl">Spaces</h1>
-                    <button className="text-sm cursor-pointer" onClick={() => {setCreateSpace(true)}}>
+                    <button
+                        className="text-sm cursor-pointer"
+                        onClick={() => {
+                            setCreateSpace(true);
+                        }}
+                    >
                         new space
                     </button>
                 </div>
@@ -59,6 +69,7 @@ function Page() {
                                 repoUrl={object.repoUrl}
                                 isPublic={object.isPublic}
                                 spaceId={object.spaceId}
+                                redirectTo={"/spaces"}
                             />
                         ))}
                     </div>
