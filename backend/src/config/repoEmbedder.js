@@ -153,17 +153,19 @@ export async function ingestRepo(
     const embeddedChunks = await Promise.all(embeddingPromises);
     console.timeEnd("generate-embeddings");
 
-    const vectors = embeddedChunks.map((chunk) => ({
-        id: chunk.id,
-        values: chunk.embedding,
-        metadata: {
-            filePath: chunk.filePath,
-            chunk: chunk.text,
-            startLine: chunk.startLine,
-            endLine: chunk.endLine,
-            repoUrl,
-        },
-    }));
+    const vectors = embeddedChunks
+        .filter((chunk) => chunk !== null)
+        .map((chunk) => ({
+            id: chunk.id,
+            values: chunk.embedding,
+            metadata: {
+                filePath: chunk.filePath,
+                chunk: chunk.text,
+                startLine: chunk.startLine,
+                endLine: chunk.endLine,
+                repoUrl,
+            },
+        }));
 
     const nameSpace = `${spaceName}-${uuidv4()}`;
 
@@ -179,7 +181,7 @@ export async function ingestRepo(
         isPublic: false,
         spaceName,
         totalFiles: codeFiles.length,
-        chunksPushed: embeddedChunks.length,
+        chunksPushed: vectors.length,
         totalLines,
     };
 
