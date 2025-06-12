@@ -1,10 +1,10 @@
 import Link from "next/link";
 import React from "react";
 
-function SpacesListItem({ spaceName, repoUrl, isPublic, spaceId, redirectTo }) {
+function SpacesListItem({ spaceName, repoUrl, isPublic, spaceId, redirectTo, tokens }) {
     return (
         <Link
-            href={`${redirectTo}/${spaceId}?spacename=${spaceName}&repo=${repoUrl}`}
+            href={`${redirectTo}/${spaceId}?spacename=${spaceName}&repo=${repoUrl}&tokens=${tokens}`}
             className="py-4 px-6 border-1 rounded-md border-gray-800 hover:border-gray-400 transition-all duration-300 cursor-pointer mr-3"
         >
             <div className="flex justify-between">

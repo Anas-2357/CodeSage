@@ -95,6 +95,7 @@ export default function SpacePage() {
     const [loading, setLoading] = useState(false);
     const containerRef = useRef(null);
     const searchParams = useSearchParams();
+    const [tokens, setTokens] = useState(searchParams.get("tokens"));
     const spaceName = searchParams.get("spacename");
     const repoUrl = searchParams.get("repo");
     const spaceId = slug;
@@ -120,6 +121,7 @@ export default function SpacePage() {
             });
 
             const data = await res.json();
+            setTokens(data.availableTokens);
 
             if (data.error) {
                 console.log(data.error);
@@ -196,9 +198,13 @@ export default function SpacePage() {
         <div className="w-full min-h-screen flex flex-col py-8 items-center gap-18 bg-[#121212] text-white">
             <div className="flex justify-between w-[70vw]">
                 <p className="text-2xl">{spaceName}</p>
-                <a href={repoUrl} target="_blank" className="text-gray-600">
-                    {repoUrl}
-                </a>
+                <div className="flex items-center gap-3">
+                    <a href={repoUrl} target="_blank" className="text-gray-600">
+                        {repoUrl}
+                    </a>
+                    <div className="border-2 h-[16px]"></div>
+                    <p className="cursor-default" title="Tokens">{tokens}</p>
+                </div>
             </div>
             <div className="w-full max-w-[70vw] space-y-6 flex flex-col items-center">
                 <div className="flex items-center max-w-[60vw] w-full mb-12 mx-auto">
@@ -220,7 +226,7 @@ export default function SpacePage() {
                     </button>
                 </div>
 
-                <div className="bg-[#C5D8D1] p-4 min-h-24 min-w-24 rounded-2xl">
+                <div className="bg-[#C5D8D1] p-4 rounded-2xl">
                     <div ref={containerRef} />
                 </div>
             </div>

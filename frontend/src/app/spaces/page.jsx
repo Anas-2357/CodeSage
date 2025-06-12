@@ -8,6 +8,7 @@ function Page() {
     const [spaces, setSpaces] = useState([]);
     const [loading, setLoading] = useState(true);
     const [createSpace, setCreateSpace] = useState(false);
+    const [tokens, setTokens] = useState();
     const router = useRouter();
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -26,6 +27,7 @@ function Page() {
 
                 const json = await res.json();
                 setSpaces(json.spaces);
+                setTokens(json.tokens);
             } catch (err) {
                 console.error("Failed to fetch spaces:", err);
             } finally {
@@ -70,6 +72,7 @@ function Page() {
                                 isPublic={object.isPublic}
                                 spaceId={object.spaceId}
                                 redirectTo={"/spaces"}
+                                tokens={tokens}
                             />
                         ))}
                     </div>
