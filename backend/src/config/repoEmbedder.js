@@ -159,10 +159,10 @@ export async function ingestRepo(
             id: chunk.id,
             values: chunk.embedding,
             metadata: {
-                filePath: chunk.filePath,
-                chunk: chunk.text,
-                startLine: chunk.startLine,
-                endLine: chunk.endLine,
+                filePath: sanitizeForPinecone(chunk.filePath),
+                chunk: sanitizeForPinecone(chunk.text),
+                startLine: sanitizeForPinecone(chunk.startLine),
+                endLine: sanitizeForPinecone(chunk.endLine),
                 repoUrl,
             },
         }));
@@ -285,4 +285,11 @@ async function batchUpsert(
         const batch = vectors.slice(i, i + batchSize);
         await upsertVectors(pinecone, batch, indexName, namespace);
     }
+}
+
+export function sanitizeForPinecone(input) {
+  if (typeof input !== "string") return input;
+  return input
+    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, "")
+    .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
 }
