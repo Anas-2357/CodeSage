@@ -47,157 +47,174 @@ export async function ingestRepo(
     spaceName,
     dryRun = true
 ) {
-    const user = await User.findById(userId);
+    try {
+        const user = await User.findById(userId);
 
-    const [userRepo, publicRepo] = await Promise.all([
-        Repo.findOne({ ownerId: userId, spaceName }),
-        Repo.findOne({ isPublic: true, spaceName }),
-    ]);
+        const [userRepo, publicRepo] = await Promise.all([
+            Repo.findOne({ ownerId: userId, spaceName }),
+            Repo.findOne({ isPublic: true, spaceName }),
+        ]);
 
-    if (!dryRun && (userRepo || publicRepo)) {
-        return {
-            message: `A space with name ${spaceName} alreay exists`,
-        };
-    }
+        if (!dryRun && (userRepo || publicRepo)) {
+            return {
+                message: `A space with name ${spaceName} alreay exists`,
+            };
+        }
 
-    const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
-    const git = simpleGit();
+        const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
+        const git = simpleGit();
 
-    console.time("git-clone");
-    await git.clone(repoUrl, tempDir, ["--depth", "1", "--single-branch"]);
-    console.timeEnd("git-clone");
+        console.time("git-clone");
+        await git.clone(repoUrl, tempDir, ["--depth", "1", "--single-branch"]);
+        console.timeEnd("git-clone");
 
-    console.time("read-files");
-    const codeFiles = getAllCodeFiles(tempDir);
-    console.timeEnd("read-files");
+        console.time("read-files");
+        const codeFiles = getAllCodeFiles(tempDir);
+        console.timeEnd("read-files");
 
-    const allChunks = [];
+        const allChunks = [];
 
-    let totalTokens = 0;
-    let totalLines = 0;
+        let totalTokens = 0;
+        let totalLines = 0;
 
-    // First pass: collect chunks and count total tokens
-    for (const file of codeFiles) {
-        const content = fs.readFileSync(file, "utf-8");
-        const chunks = splitIntoChunks(content);
-        const linesInFile = content.split("\n").length;
-        totalLines += linesInFile;
+        // First pass: collect chunks and count total tokens
 
-        const tokensInFile = chunks.reduce(
-            (sum, chunk) => sum + enc.encode(chunk.text).length,
-            0
-        );
-        totalTokens += tokensInFile;
+        console.time("collect chunks");
+        for (const file of codeFiles) {
+            const content = fs.readFileSync(file, "utf-8");
+            const chunks = splitIntoChunks(content);
+            const linesInFile = content.split("\n").length;
+            totalLines += linesInFile;
 
-        chunks.forEach((chunk, i) => {
-            allChunks.push({
-                id: `${file}::chunk-${i}`,
-                text: chunk.text,
-                startLine: chunk.startLine,
-                endLine: chunk.endLine,
-                filePath: file.replace(tempDir, ""),
+            const tokensInFile = chunks.reduce(
+                (sum, chunk) => sum + enc.encode(chunk.text).length,
+                0
+            );
+            totalTokens += tokensInFile;
+
+            chunks.forEach((chunk, i) => {
+                allChunks.push({
+                    id: `${file}::chunk-${i}`,
+                    text: chunk.text,
+                    startLine: chunk.startLine,
+                    endLine: chunk.endLine,
+                    filePath: file.replace(tempDir, ""),
+                });
             });
-        });
-    }
+        }
+        console.timeEnd("collect chunks");
 
-    var availableTokens = Number(user.tokens.toFixed(0));
+        var availableTokens = Number(user.tokens.toFixed(0));
 
-    if (dryRun) {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-        return {
-            message: "✅ Dry run complete. Enough tokens available.",
-            estimatedTokenCount: Math.ceil(totalTokens / 500),
-            availableTokens,
-            totalFiles: codeFiles.length,
-            totalLines,
-        };
-    }
+        if (dryRun) {
+            allChunks.length = 0;
 
-    totalTokens = Number((totalTokens / 500).toFixed(0));
+            return {
+                message: "✅ Dry run complete. Enough tokens available.",
+                estimatedTokenCount: Math.ceil(totalTokens / 500),
+                availableTokens,
+                totalFiles: codeFiles.length,
+                totalLines,
+            };
+        }
 
-    // Token quota check
-    if (totalTokens > availableTokens) {
-        return {
-            message: "❌ Not enough tokens available to process this repo.",
-            requiredTokens: totalTokens,
-            availableTokens,
-            totalLines,
-        };
-    }
+        totalTokens = Number((totalTokens / 500).toFixed(0));
 
-    // Proceed with embeddings
-    console.time("generate-embeddings");
-    const limit = pLimit(5);
-    const embeddingPromises = allChunks.map((chunk) =>
-        limit(() => {
-            if (!chunk.text || chunk.text.trim() === "") {
-                console.warn(`Empty chunk: ${chunk.id}`);
-                return null;
-            }
+        // Token quota check
+        if (totalTokens > availableTokens) {
+            return {
+                message: "❌ Not enough tokens available to process this repo.",
+                requiredTokens: totalTokens,
+                availableTokens,
+                totalLines,
+            };
+        }
 
-            const tokenLength = enc.encode(chunk.text).length;
-            if (tokenLength > 8191) {
-                console.warn(
-                    `Oversized chunk skipped: ${chunk.id} with ${tokenLength} tokens`
-                );
-                return null;
-            }
+        // Proceed with embeddings
+        console.time("generate-embeddings");
+        const limit = pLimit(5);
+        const embeddingPromises = allChunks.map((chunk) =>
+            limit(() => {
+                if (!chunk.text || chunk.text.trim() === "") {
+                    console.warn(`Empty chunk: ${chunk.id}`);
+                    return null;
+                }
 
-            return generateEmbeddings([chunk.text]).then((embeddings) => ({
-                ...chunk,
-                embedding: embeddings[0],
+                const tokenLength = enc.encode(chunk.text).length;
+                if (tokenLength > 8191) {
+                    console.warn(
+                        `Oversized chunk skipped: ${chunk.id} with ${tokenLength} tokens`
+                    );
+                    return null;
+                }
+
+                return generateEmbeddings([chunk.text]).then((embeddings) => ({
+                    ...chunk,
+                    embedding: embeddings[0],
+                }));
+            })
+        );
+
+        const embeddedChunks = await Promise.all(embeddingPromises);
+        console.timeEnd("generate-embeddings");
+
+        const vectors = embeddedChunks
+            .filter((chunk) => chunk !== null)
+            .map((chunk) => ({
+                id: chunk.id,
+                values: chunk.embedding,
+                metadata: {
+                    filePath: sanitizeForPinecone(chunk.filePath),
+                    chunk: sanitizeForPinecone(chunk.text),
+                    startLine: sanitizeForPinecone(chunk.startLine),
+                    endLine: sanitizeForPinecone(chunk.endLine),
+                    repoUrl,
+                },
             }));
-        })
-    );
 
-    const embeddedChunks = await Promise.all(embeddingPromises);
-    console.timeEnd("generate-embeddings");
+        const nameSpace = `${spaceName}-${uuidv4()}`;
 
-    const vectors = embeddedChunks
-        .filter((chunk) => chunk !== null)
-        .map((chunk) => ({
-            id: chunk.id,
-            values: chunk.embedding,
-            metadata: {
-                filePath: sanitizeForPinecone(chunk.filePath),
-                chunk: sanitizeForPinecone(chunk.text),
-                startLine: sanitizeForPinecone(chunk.startLine),
-                endLine: sanitizeForPinecone(chunk.endLine),
-                repoUrl,
-            },
-        }));
+        // Upsert in vector DB
+        console.time("Batch and upsert vectors");
+        await batchUpsert(pinecone, vectors, indexName, nameSpace);
+        console.timeEnd("Batch and upsert vectors");
 
-    const nameSpace = `${spaceName}-${uuidv4()}`;
+        const repoData = {
+            ownerId: userId,
+            nameSpace,
+            repoUrl,
+            isPublic: false,
+            spaceName,
+            totalFiles: codeFiles.length,
+            chunksPushed: vectors.length,
+            totalLines,
+        };
 
-    // Upsert in vector DB
-    console.time("Batch and upsert vectors");
-    await batchUpsert(pinecone, vectors, indexName, nameSpace);
-    console.timeEnd("Batch and upsert vectors");
+        allChunks.length = 0;
+        embeddedChunks.length = 0;
+        vectors.length = 0;
 
-    const repoData = {
-        ownerId: userId,
-        nameSpace,
-        repoUrl,
-        isPublic: false,
-        spaceName,
-        totalFiles: codeFiles.length,
-        chunksPushed: vectors.length,
-        totalLines,
-    };
+        await createAndUpserRepoInDb(repoData);
 
-    await createAndUpserRepoInDb(repoData);
+        user.tokens = user.tokens - totalTokens;
+        await user.save();
+        availableTokens = Number(user.tokens.toFixed(0));
 
-    user.tokens = user.tokens - totalTokens;
-    await user.save();
-    availableTokens = Number(user.tokens.toFixed(0));
-    fs.rmSync(tempDir, { recursive: true, force: true });
-
-    return {
-        message: `✅ Ingested ${codeFiles.length} files from repo.`,
-        totalTokens,
-        availableTokens,
-        totalLines,
-    };
+        return {
+            message: `✅ Ingested ${codeFiles.length} files from repo.`,
+            totalTokens,
+            availableTokens,
+            totalLines,
+        };
+    } catch (err) {
+        return {
+            message: `Repo injection failed`,
+            error: err.message,
+        };
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        global.gc?.();
+    }
 }
 
 function getAllCodeFiles(dir, allFiles = []) {
@@ -288,8 +305,8 @@ async function batchUpsert(
 }
 
 export function sanitizeForPinecone(input) {
-  if (typeof input !== "string") return input;
-  return input
-    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, "")
-    .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
+    if (typeof input !== "string") return input;
+    return input
+        .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, "")
+        .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
 }
