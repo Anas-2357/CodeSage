@@ -1,8 +1,10 @@
 import Repo from "../models/Repo.js";
+import User from "../models/User.js";
 
 export const getUserSpaces = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = req.userId;
+        const user = await User.findById(userId);
 
         var spaces = await Repo.find({ userId, isPublic: false });
         spaces =[...spaces, ...(await Repo.find({ userId, isPublic: true }))];
@@ -15,7 +17,7 @@ export const getUserSpaces = async (req, res) => {
             spaceId: space._id,
         }));
 
-        return res.status(200).json({ spaces: formatted });
+        return res.status(200).json({ spaces: formatted, tokens: Number((user.tokens).toFixed()) });
     } catch (error) {
         console.error("Error fetching user spaces:", error);
         return res.status(500).json({ error: "Internal server error" });
