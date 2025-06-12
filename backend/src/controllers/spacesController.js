@@ -10,7 +10,7 @@ export const getUserSpaces = async (req, res) => {
         console.log(spaces);
         spaces =[...spaces, ...(await Repo.find({ ownerId: userId, isPublic: true }))];
         console.log(spaces);
-        spaces = [...spaces, ...(await Repo.find({ isPublic: true, userId: { $ne: userId } }))];
+        spaces = [...spaces, ...(await Repo.find({ isPublic: true, ownerId: { $ne: userId } }))];
         console.log(spaces);
 
         const formatted = spaces.map((space) => ({
