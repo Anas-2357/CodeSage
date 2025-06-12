@@ -47,6 +47,13 @@ export async function ingestRepo(
     spaceName,
     dryRun = true
 ) {
+    let tempDir;
+    let totalTokens = 0;
+    let totalLines = 0;
+    let codeFiles;
+    const allChunks = [];
+    let embeddedChunks;
+    let vectors;
     try {
         const user = await User.findById(userId);
 
@@ -61,7 +68,7 @@ export async function ingestRepo(
             };
         }
 
-        const tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
+        tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
         const git = simpleGit();
 
         console.time("git-clone");
@@ -69,13 +76,8 @@ export async function ingestRepo(
         console.timeEnd("git-clone");
 
         console.time("read-files");
-        const codeFiles = getAllCodeFiles(tempDir);
+        codeFiles = getAllCodeFiles(tempDir);
         console.timeEnd("read-files");
-
-        const allChunks = [];
-
-        let totalTokens = 0;
-        let totalLines = 0;
 
         // First pass: collect chunks and count total tokens
 
@@ -104,11 +106,9 @@ export async function ingestRepo(
         }
         console.timeEnd("collect chunks");
 
-        var availableTokens = Number(user.tokens.toFixed(0));
+        let availableTokens = Number(user.tokens.toFixed(0));
 
         if (dryRun) {
-            allChunks.length = 0;
-
             return {
                 message: "✅ Dry run complete. Enough tokens available.",
                 estimatedTokenCount: Math.ceil(totalTokens / 500),
@@ -155,10 +155,10 @@ export async function ingestRepo(
             })
         );
 
-        const embeddedChunks = await Promise.all(embeddingPromises);
+        embeddedChunks = await Promise.all(embeddingPromises);
         console.timeEnd("generate-embeddings");
 
-        const vectors = embeddedChunks
+        vectors = embeddedChunks
             .filter((chunk) => chunk !== null)
             .map((chunk) => ({
                 id: chunk.id,
@@ -190,10 +190,6 @@ export async function ingestRepo(
             totalLines,
         };
 
-        allChunks.length = 0;
-        embeddedChunks.length = 0;
-        vectors.length = 0;
-
         await createAndUpserRepoInDb(repoData);
 
         user.tokens = user.tokens - totalTokens;
@@ -214,6 +210,9 @@ export async function ingestRepo(
     } finally {
         fs.rmSync(tempDir, { recursive: true, force: true });
         global.gc?.();
+        allChunks.length = 0;
+        embeddedChunks.length = 0;
+        vectors.length = 0;
     }
 }
 
