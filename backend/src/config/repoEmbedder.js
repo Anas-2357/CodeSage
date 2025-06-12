@@ -216,6 +216,7 @@ export async function ingestRepo(
     } finally {
         fs.rmSync(tempDir, { recursive: true, force: true });
         global.gc?.();
+        codeFiles.length = 0;
         allChunks.length = 0;
         embeddedChunks.length = 0;
         vectors.length = 0;
