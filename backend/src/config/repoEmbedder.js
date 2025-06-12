@@ -64,7 +64,7 @@ export async function ingestRepo(
     const git = simpleGit();
 
     console.time("git-clone");
-    await git.clone(repoUrl, tempDir);
+    await git.clone(repoUrl, tempDir, ['--depth', '1', '--single-branch']);
     console.timeEnd("git-clone");
 
     console.time("read-files");
