@@ -155,9 +155,9 @@ export async function ingestRepo(
     const nameSpace = `${spaceName}-${uuidv4()}`;
 
     // Upsert in vector DB
-    console.time("generate-embeddings");
-    await upsertVectors(pinecone, vectors, indexName, nameSpace);
-    console.timeEnd("generate-embeddings");
+    console.time("Batch and upsert vectors");
+    await batchUpsert(pinecone, vectors, indexName, nameSpace);
+    console.timeEnd("Batch and upsert vectors");
 
     const repoData = {
         ownerId: userId,
@@ -257,4 +257,11 @@ export function splitIntoChunks(text, maxTokens = 1000, overlap = 200) {
     }
 
     return chunks;
+}
+
+async function batchUpsert(pinecone, vectors, indexName, namespace, batchSize = 100) {
+    for (let i = 0; i < vectors.length; i += batchSize) {
+        const batch = vectors.slice(i, i + batchSize);
+        await upsertVectors(pinecone, batch, indexName, namespace);
+    }
 }
