@@ -50,10 +50,10 @@ export async function ingestRepo(
     let tempDir;
     let totalTokens = 0;
     let totalLines = 0;
-    const codeFiles = [];
-    const allChunks = [];
-    const embeddedChunks = [];
-    const vectors = [];
+    let codeFiles = [];
+    let allChunks = [];
+    let embeddedChunks = [];
+    let vectors = [];
     try {
         const user = await User.findById(userId);
 
@@ -71,17 +71,17 @@ export async function ingestRepo(
         tempDir = path.join(os.tmpdir(), `repo-${uuidv4()}`);
         const git = simpleGit();
 
-        console.time("git-clone");
+        console.time(`git-clone-${tempDir}`);
         await git.clone(repoUrl, tempDir, ["--depth", "1", "--single-branch"]);
-        console.timeEnd("git-clone");
+        console.timeEnd(`git-clone-${tempDir}`);
 
-        console.time("read-files");
+        console.time(`read-files-${tempDir}`);
         codeFiles = getAllCodeFiles(tempDir);
-        console.timeEnd("read-files");
+        console.timeEnd(`read-files-${tempDir}`);
 
         // First pass: collect chunks and count total tokens
 
-        console.time("collect chunks");
+        console.time(`collect chunks-${tempDir}`);
         for (const file of codeFiles) {
             const content = fs.readFileSync(file, "utf-8");
             const chunks = splitIntoChunks(content);
@@ -104,7 +104,7 @@ export async function ingestRepo(
                 });
             });
         }
-        console.timeEnd("collect chunks");
+        console.timeEnd(`collect chunks-${tempDir}`);
 
         let availableTokens = Number(user.tokens.toFixed(0));
 
@@ -131,7 +131,7 @@ export async function ingestRepo(
         }
 
         // Proceed with embeddings
-        console.time("generate-embeddings");
+        console.time(`generate-embeddings-${tempDir}`);
         const limit = pLimit(5);
         const embeddingPromises = allChunks.map((chunk) =>
             limit(() => {
@@ -156,7 +156,7 @@ export async function ingestRepo(
         );
 
         embeddedChunks = await Promise.all(embeddingPromises);
-        console.timeEnd("generate-embeddings");
+        console.timeEnd(`generate-embeddings-${tempDir}`);
 
         vectors = embeddedChunks
             .filter((chunk) => chunk !== null)
@@ -175,9 +175,9 @@ export async function ingestRepo(
         const nameSpace = `${spaceName}-${uuidv4()}`;
 
         // Upsert in vector DB
-        console.time("Batch and upsert vectors");
+        console.time(`Batch and upsert vectors-${tempDir}`);
         await batchUpsert(pinecone, vectors, indexName, nameSpace);
-        console.timeEnd("Batch and upsert vectors");
+        console.timeEnd(`Batch and upsert vectors-${tempDir}`);
 
         const repoData = {
             ownerId: userId,
@@ -203,6 +203,12 @@ export async function ingestRepo(
             totalLines,
         };
     } catch (err) {
+        if (dryRun) {
+            return {
+                message: `Dry run failed`,
+                error: err.message,
+            };
+        }
         return {
             message: `Repo injection failed`,
             error: err.message,
