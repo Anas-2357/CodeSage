@@ -14,29 +14,29 @@ import Repo from "../models/Repo.js";
 const enc = encoding_for_model("text-embedding-3-small");
 
 const IGNORE_DIRS = [
-  'node_modules',
-  '.git',
-  'dist',
-  'build',
-  'out',
-  '.next',
-  'coverage',
-  '.turbo',
-  '.vscode',
-  '.idea',
-  '.cache',
-  '.vercel',
-  '.firebase',
-  'android',
-  'ios',
-  '.expo',
-  '__pycache__',
-  '.pytest_cache',
-  '.venv',
-  'env',
-  'tmp',
-  'logs',
-  'bin'
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    "out",
+    ".next",
+    "coverage",
+    ".turbo",
+    ".vscode",
+    ".idea",
+    ".cache",
+    ".vercel",
+    ".firebase",
+    "android",
+    "ios",
+    ".expo",
+    "__pycache__",
+    ".pytest_cache",
+    ".venv",
+    "env",
+    "tmp",
+    "logs",
+    "bin",
 ];
 
 export async function ingestRepo(
@@ -64,7 +64,7 @@ export async function ingestRepo(
     const git = simpleGit();
 
     console.time("git-clone");
-    await git.clone(repoUrl, tempDir, ['--depth', '1', '--single-branch']);
+    await git.clone(repoUrl, tempDir, ["--depth", "1", "--single-branch"]);
     console.timeEnd("git-clone");
 
     console.time("read-files");
@@ -127,14 +127,27 @@ export async function ingestRepo(
 
     // Proceed with embeddings
     console.time("generate-embeddings");
-    const limit = pLimit(3);
+    const limit = pLimit(5);
     const embeddingPromises = allChunks.map((chunk) =>
-        limit(() =>
-            generateEmbeddings([chunk.text]).then((embeddings) => ({
+        limit(() => {
+            if (!chunk.text || chunk.text.trim() === "") {
+                console.warn(`Empty chunk: ${chunk.id}`);
+                return null;
+            }
+
+            const tokenLength = enc.encode(chunk.text).length;
+            if (tokenLength > 8191) {
+                console.warn(
+                    `Oversized chunk skipped: ${chunk.id} with ${tokenLength} tokens`
+                );
+                return null;
+            }
+
+            return generateEmbeddings([chunk.text]).then((embeddings) => ({
                 ...chunk,
                 embedding: embeddings[0],
-            }))
-        )
+            }));
+        })
     );
 
     const embeddedChunks = await Promise.all(embeddingPromises);
@@ -259,7 +272,13 @@ export function splitIntoChunks(text, maxTokens = 1000, overlap = 200) {
     return chunks;
 }
 
-async function batchUpsert(pinecone, vectors, indexName, namespace, batchSize = 100) {
+async function batchUpsert(
+    pinecone,
+    vectors,
+    indexName,
+    namespace,
+    batchSize = 100
+) {
     for (let i = 0; i < vectors.length; i += batchSize) {
         const batch = vectors.slice(i, i + batchSize);
         await upsertVectors(pinecone, batch, indexName, namespace);
