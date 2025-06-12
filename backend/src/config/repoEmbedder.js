@@ -50,10 +50,10 @@ export async function ingestRepo(
     let tempDir;
     let totalTokens = 0;
     let totalLines = 0;
-    let codeFiles;
+    const codeFiles = [];
     const allChunks = [];
-    let embeddedChunks;
-    let vectors;
+    const embeddedChunks = [];
+    const vectors = [];
     try {
         const user = await User.findById(userId);
 
