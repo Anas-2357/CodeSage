@@ -12,11 +12,29 @@ mermaid.initialize({
         nodeSpacing: 60,
         rankSpacing: 40,
         useMaxWidth: false,
-        // disable link gradients for cleaner look:
         linkStyle: "stroke:#34d399;stroke-width:1.5px;",
     },
-    securityLevel: "loose", // if you trust input (optional)
+    securityLevel: "loose",
 });
+
+function extractMetaDataFromText(text) {
+    // Remove all mermaid code blocks
+    const withoutMermaid = text.replace(/```mermaid[\s\S]*?```/gi, "");
+
+    // Match the first JSON code block
+    const match = withoutMermaid.match(/```json\s*([\s\S]*?)\s*```/i);
+
+    if (!match || match.length < 2) {
+        throw new Error("No valid JSON code block found.");
+    }
+
+    try {
+        const json = JSON.parse(match[1]);
+        return json;
+    } catch (e) {
+        throw new Error("Found code block but failed to parse JSON.");
+    }
+}
 
 function extractAndSanitizeMermaid(code) {
     const match = code.match(/```mermaid\s+([\s\S]*?)```/);
@@ -73,12 +91,15 @@ export default function SpacePage() {
     const { slug } = useParams();
     const [inputValue, setInputValue] = useState("");
     const [diagramCode, setDiagramCode] = useState("");
+    const [metaData, setMetaData] = useState("");
     const [loading, setLoading] = useState(false);
     const containerRef = useRef(null);
     const searchParams = useSearchParams();
+    const [tokens, setTokens] = useState(searchParams.get("tokens"));
     const spaceName = searchParams.get("spacename");
     const repoUrl = searchParams.get("repo");
     const spaceId = slug;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const handleSend = async () => {
         if (!inputValue.trim()) return;
@@ -86,46 +107,47 @@ export default function SpacePage() {
         setDiagramCode("");
 
         try {
-            const res = await fetch(
-                "http://localhost:8080/query/guest",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-
-                    },
-                    body: JSON.stringify({
-                        query: inputValue,
-                        spaceId,
-                        spaceName: 'New',
-                    }),
-                }
-            );
+            const res = await fetch(`${apiUrl}/query/guest`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    query: inputValue,
+                    spaceId,
+                    spaceName,
+                }),
+                credentials: "include",
+            });
 
             const data = await res.json();
-            
+            setTokens(data.availableTokens);
 
-            if(data.error){
-                console.log(data.error)
+            if (data.error) {
+                console.log(data.error);
                 // Can use some other way to show error
-                setDiagramCode(data.error)
+                setDiagramCode(data.error);
                 return;
             }
 
             const raw = data.response || "";
             console.log(raw);
             const sanitized = extractAndSanitizeMermaid(raw);
+            const sanitizedMetaData = extractMetaDataFromText(raw);
+            setMetaData(sanitizedMetaData);
 
             if (sanitized && isValidMermaid(sanitized)) {
                 setDiagramCode(sanitized);
             } else {
                 setDiagramCode(
-                    "Error: No valid Mermaid diagram found or syntax invalid."
+                    "Error: Unexpected response from server, please try again"
                 );
             }
         } catch (err) {
             console.error("Error fetching from backend:", err);
-            setDiagramCode("Error: Failed to fetch data from backend.");
+            setDiagramCode(
+                "Error: Unexpected response from server, please try again"
+            );
         } finally {
             setLoading(false);
         }
@@ -150,15 +172,20 @@ export default function SpacePage() {
                     svgEl.style.height = "auto";
                     svgEl.style.borderRadius = "0.5rem";
                     svgEl.style.backgroundColor = "#121212";
+                    svgEl.style.padding = "50px";
 
                     // Add tooltips to all nodes and edges
                     svgEl.querySelectorAll("g.node, g.edge").forEach((el) => {
-                        const title = document.createElementNS(
-                            "http://www.w3.org/2000/svg",
-                            "title"
-                        );
-                        title.textContent = "This is a tool tip";
-                        el.appendChild(title);
+                        const id = el.id.split("-")[1];
+                        if (metaData[id]) {
+                            const title = document.createElementNS(
+                                "http://www.w3.org/2000/svg",
+                                "title"
+                            );
+                            const titleContent = `Description: ${metaData[id]?.description}\n\nFuntion: ${metaData[id]?.function}\n\nFile Path: ${metaData[id]?.filePath}\n\nLine Number: ${metaData[id]?.startLine}`;
+                            title.textContent = titleContent;
+                            el.appendChild(title);
+                        }
                     });
                 }
             })
@@ -168,13 +195,19 @@ export default function SpacePage() {
             });
     }, [diagramCode]);
     return (
-        <div className="w-full h-screen flex flex-col py-8 items-center gap-18 bg-[#121212] text-white">
+        <div className="w-full min-h-screen flex flex-col py-8 items-center gap-18 bg-[#121212] text-white">
             <div className="flex justify-between w-[70vw]">
                 <p className="text-2xl">{spaceName}</p>
-                <a href={repoUrl} target="_blank" className="text-gray-600">{repoUrl}</a>
+                <div className="flex items-center gap-3">
+                    <a href={repoUrl} target="_blank" className="text-gray-600">
+                        {repoUrl}
+                    </a>
+                    <div className="border-2 h-[16px]"></div>
+                    <p className="cursor-default" title="Tokens">{tokens}</p>
+                </div>
             </div>
             <div className="w-full max-w-[70vw] space-y-6 flex flex-col items-center">
-                <div className="flex items-center max-w-[60vw] mb-12 mx-auto w-full">
+                <div className="flex items-center max-w-[60vw] w-full mb-12 mx-auto">
                     <input
                         className="flex-grow px-4 py-2 border border-gray-700 rounded-sm mr-4 bg-[#1e1e1e] text-white"
                         type="text"
@@ -193,7 +226,7 @@ export default function SpacePage() {
                     </button>
                 </div>
 
-                <div className="bg-[#C5D8D1] p-4 min-h-24 min-w-24 rounded-2xl">
+                <div className="bg-[#C5D8D1] p-4 rounded-2xl">
                     <div ref={containerRef} />
                 </div>
             </div>

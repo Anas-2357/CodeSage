@@ -84,7 +84,7 @@ export const query = async (req, res) => {
 
 export const guestQuery = async (req, res) => {
     try {
-        const { query, mermaidComplexity = 2, spaceName } = req.body;
+        const { query, mermaidComplexity = 2, spaceId, spaceName } = req.body;
         const topK = 200;
 
         if (!query) {
@@ -95,9 +95,9 @@ export const guestQuery = async (req, res) => {
             return res.status(400).json({ error: "Missing Space name" });
         }
 
-        const publicRepo = await Repo.findOne({ isPublic: true, spaceName })
+        const publicRepo = await Repo.findOne({ isPublic: true, spaceId });
 
-        const nameSpace = null;
+        let nameSpace = null;
 
         if (publicRepo) {
             nameSpace = publicRepo.nameSpace
