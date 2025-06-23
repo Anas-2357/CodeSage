@@ -15,7 +15,7 @@ export async function askGPT(
             ? "There should be a maximum of 25 elements"
             : "Provide as many elements as possible.";
     const completion = await openai.chat.completions.create({
-        model: "gpt-4.1-nano",
+        model: "gpt-4.1-mini",
         messages: [
             {
                 role: "system",
