@@ -36,6 +36,7 @@ app.use(express.json());
 app.use(globalLimiter);
 
 app.get("/", (req, res) => {
+    console.log("Server status check")
     res.status(200).send("Server is up and running!");
 });
 
