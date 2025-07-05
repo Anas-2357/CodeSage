@@ -6,6 +6,7 @@ export async function askGPT(
     query,
     contextText,
     mermaidComplexity,
+    isGuestQuery,
     userId = null
 ) {
     const complexityPara =
@@ -84,7 +85,7 @@ flowchart TD
     const inputTokens = completion.usage.prompt_tokens / 100;
     const outputTokens = completion.usage.completion_tokens / 25;
 
-    if (userId) {
+    if (!isGuestQuery && userId) {
         const user = await User.findById(userId);
         user.tokens = user.tokens - (inputTokens + outputTokens);
         if (user.tokens < 0) user.tokens = 0;
